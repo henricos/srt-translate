@@ -1,2 +1,2 @@
-google-genai
-python-dotenv
+google-genai>=1.26.0
+python-dotenv>=1.1.1

@@ -1,35 +1,98 @@
 #!/bin/bash
+#
+# setup.sh
+# Autor: Henrico Scaranello
+# Data: 2025-07-21
+#
+# Descrição: Script para configurar o ambiente de desenvolvimento do projeto.
+# Este script verifica as dependências, cria o ambiente virtual Python
+# e instala os pacotes necessários do requirements.txt.
 
-# --- setup.sh ---
-# Script para configurar o ambiente de desenvolvimento.
+# Opções de segurança:
+# -e: sai imediatamente se um comando falhar
+# -u: trata variáveis não definidas como um erro
+# -o pipefail: o status de saída de um pipe é o do último comando que falhou
+set -euo pipefail
+
+# --- Constantes ---
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_NAME="$(basename "$0")"
 
 # Cores para o output
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+readonly COR_VERDE='\033[0;32m'
+readonly COR_AMARELA='\033[1;33m'
+readonly COR_VERMELHA='\033[0;31m'
+readonly SEM_COR='\033[0m'
 
-echo -e "${YELLOW}Iniciando a configuração do ambiente...${NC}"
+# Nomes de arquivos e diretórios
+readonly VENV_DIR="venv"
+readonly REQUIREMENTS_FILE="requirements.txt"
+readonly ENV_EXAMPLE_FILE="config/.env.example"
+readonly ENV_FILE="config/.env"
 
-# 1. Verifica se o python3-venv está instalado
-if ! dpkg -s python3-venv &> /dev/null; then
-    echo -e "${YELLOW}O pacote python3-venv não está instalado. Por favor, instale-o com 'sudo apt update && sudo apt install python3-venv' e execute o script novamente.${NC}"
-    exit 1
+# --- Funções ---
+
+# Mostra uma mensagem de log formatada
+function log() {
+    local cor="$1"
+    local mensagem="$2"
+    echo -e "${cor}${mensagem}${SEM_COR}"
+}
+
+# Função principal do script
+function main() {
+    log "$SEM_COR" "--> Iniciando a configuração do ambiente..."
+    cd "$SCRIPT_DIR" # Garante que estamos no diretório do script
+
+    # 1. Verifica as dependências do sistema
+    log "$SEM_COR" "--> Verificando dependências do sistema..."
+
+    # Verifica ffmpeg
+    if ! command -v ffmpeg &> /dev/null; then
+        log "$COR_VERMELHA" "Erro: O comando 'ffmpeg' não foi encontrado."
+        log "$SEM_COR" "Por favor, instale o ffmpeg (ex: 'sudo apt install ffmpeg') e tente novamente."
+        exit 1
+    fi
+
+    # Verifica Python 3 e venv
+    if ! python3 -m venv --help &> /dev/null; then
+        log "$COR_VERMELHA" "Erro: O comando 'python3' não está disponível ou o módulo 'venv' não pôde ser encontrado."
+        log "$SEM_COR" "Por favor, instale o Python 3 e o pacote python3-venv (ex: 'sudo apt install python3-venv') e tente novamente."
+        exit 1
+    fi
+    log "$COR_VERDE" "Dependências do sistema (ffmpeg, Python, venv) verificadas com sucesso."
+
+
+    # 2. Cria o ambiente virtual
+    if [[ ! -d "$VENV_DIR" ]]; then
+        log "$SEM_COR" "--> Criando ambiente virtual em '$VENV_DIR/'..."
+        python3 -m venv "$VENV_DIR"
+        log "$COR_VERDE" "Ambiente virtual criado."
+    else
+        log "$SEM_COR" "--> Ambiente virtual '$VENV_DIR/' já existe."
+    fi
+
+    # 3. Instala as dependências do requirements.txt
+    if [[ -f "$REQUIREMENTS_FILE" ]]; then
+        log "$SEM_COR" "--> Instalando dependências do '$REQUIREMENTS_FILE'..."
+        "$VENV_DIR/bin/pip" install -r "$REQUIREMENTS_FILE"
+        log "$COR_VERDE" "Dependências instaladas com sucesso."
+    else
+        log "$COR_VERMELHA" "Erro: Arquivo '$REQUIREMENTS_FILE' não encontrado. Nenhuma dependência foi instalada."
+    fi
+    
+    # 4. Verifica o arquivo de configuração .env
+    if [[ ! -f "$ENV_FILE" && -f "$ENV_EXAMPLE_FILE" ]]; then
+        log "$COR_AMARELA" "Aviso: O arquivo de configuração '$ENV_FILE' não foi encontrado."
+        log "$COR_AMARELA" "Considere copiá-lo a partir de '$ENV_EXAMPLE_FILE' e preencher os valores."
+    fi
+
+    echo # Linha em branco para espaçamento
+    log "$SEM_COR" "--> Ambiente configurado com sucesso!"
+}
+
+# --- Execução Principal ---
+# Garante que o script só executa a função main se for chamado diretamente
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
 fi
-
-# 2. Cria o ambiente virtual
-if [ ! -d "venv" ]; then
-    echo "Criando ambiente virtual em 'venv/'..."
-    python3 -m venv venv
-else
-    echo "Ambiente virtual 'venv/' já existe."
-fi
-
-# 3. Instala as dependências do requirements.txt
-echo "Instalando dependências do requirements.txt..."
-source venv/bin/activate
-pip install -r requirements.txt
-deactivate
-
-echo -e "\n${GREEN}Ambiente configurado com sucesso!${NC}"
-echo -e "Não se esqueça de criar o arquivo ${YELLOW}config/.env${NC} com a sua chave de API."
-echo -e "Para usar as ferramentas, execute os scripts no diretório ${YELLOW}bin/${NC}."
