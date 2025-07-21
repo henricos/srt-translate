@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-21 - Ajuste de Dependências e Setup
+
+Nesta sessão, o arquivo `requirements.txt` foi atualizado para especificar as versões mínimas das dependências `google-genai` e `python-dotenv`. Adicionalmente, o script `setup.sh` foi ajustado para garantir a correta configuração do ambiente de desenvolvimento.
+
+---
+
 ## 2025-07-21 - Melhorias na Documentação do README
 
 Nesta sessão, o arquivo `README.md` foi aprimorado para maior clareza. A seção de pré-requisitos foi atualizada para especificar que o projeto assume um ambiente Ubuntu e que os comandos são exemplificativos. Além disso, foi adicionada uma nota na seção de uso indicando que a funcionalidade de transcrição de áudio ainda será implementada.
