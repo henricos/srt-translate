@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-21 - Adição do Diretório de Saída
+
+Nesta sessão, foi criado o diretório `output` para armazenar os arquivos gerados pelos scripts, como legendas e áudios extraídos. A estrutura do projeto foi atualizada, incluindo a configuração do `.gitignore` para ignorar o conteúdo deste novo diretório e a documentação no `README.md` foi ajustada para refletir a mudança.
+
+---
+
 ## 2025-07-21 - Refatoração da Configuração e Estrutura
 
 Nesta sessão, foram realizados ajustes na configuração e estrutura do projeto. O `README.md` foi corrigido para refletir a localização correta do arquivo de ambiente, a variável no `.env.example` foi padronizada para `GEMINI_API_KEY`, e o diretório `logs` foi criado com a devida configuração no `.gitignore` para ser versionado corretamente.

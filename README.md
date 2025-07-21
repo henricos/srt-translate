@@ -17,6 +17,8 @@ srt-translate/
 ├── bin/              # Scripts executáveis
 ├── config/           # Arquivos de configuração
 ├── docs/             # Documentação
+├── logs/             # Arquivos de log
+├── output/           # Arquivos de saída (legendas, áudios, etc.)
 ├── src/              # Código fonte Python
 ├── tests/            # Testes (a serem implementados)
 ├── .gitignore
