@@ -19,7 +19,6 @@ srt-translate/
 ├── docs/             # Documentação
 ├── src/              # Código fonte Python
 ├── tests/            # Testes (a serem implementados)
-├── .env.example      # Exemplo de variáveis de ambiente
 ├── .gitignore
 ├── LICENSE
 ├── README.md

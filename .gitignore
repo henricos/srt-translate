@@ -14,3 +14,7 @@ config/.env
 # Arquivos de IDE
 .vscode/
 .idea/
+
+# Logs
+logs/*
+!logs/.gitkeep
