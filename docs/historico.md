@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-21 - Implementação do Script de Extração de Legendas
+
+Nesta sessão, foi criado e depurado o script `bin/extract_subtitle.sh`. O script utiliza `ffmpeg` para identificar e extrair todas as faixas de legenda no formato SRT de arquivos de vídeo MKV, salvando-as no diretório `output/` com nomes padronizados contendo o idioma. O processo incluiu a implementação de validações, tratamento de erros e um ciclo de depuração para garantir a robustez e portabilidade do script.
+
+---
+
 ## 2025-07-21 - Adição do Diretório de Saída
 
 Nesta sessão, foi criado o diretório `output` para armazenar os arquivos gerados pelos scripts, como legendas e áudios extraídos. A estrutura do projeto foi atualizada, incluindo a configuração do `.gitignore` para ignorar o conteúdo deste novo diretório e a documentação no `README.md` foi ajustada para refletir a mudança.
