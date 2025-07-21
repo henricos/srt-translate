@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-21 - Melhorias na Documentação do README
+
+Nesta sessão, o arquivo `README.md` foi aprimorado para maior clareza. A seção de pré-requisitos foi atualizada para especificar que o projeto assume um ambiente Ubuntu e que os comandos são exemplificativos. Além disso, foi adicionada uma nota na seção de uso indicando que a funcionalidade de transcrição de áudio ainda será implementada.
+
+---
+
 ## 2025-07-21 - Adequação da Documentação às Regras do Projeto
 
 Nesta sessão, foram revisadas as regras definidas no diretório `.clinerules` e, com base nelas, os arquivos `README.md` e `docs/historico.md` foram atualizados para se alinharem aos padrões de documentação, estrutura e formato de data do projeto.

@@ -28,10 +28,23 @@ srt-translate/
 
 ## 📋 Pré-requisitos
 
-- `git`
-- `ffmpeg`
-- `python3`
-- `python3-venv`
+Este projeto foi desenvolvido e testado em um ambiente Ubuntu. Os comandos a seguir são exemplos de como instalar as dependências necessárias nessa distribuição. Caso utilize outro sistema operacional, consulte a documentação oficial das ferramentas para obter as instruções de instalação corretas.
+
+### FFmpeg
+
+O `ffmpeg` é essencial para a manipulação de arquivos de áudio e vídeo, permitindo a extração de legendas e a conversão de formatos. Como exemplo, para instalá-lo em sistemas baseados em Debian/Ubuntu, pode-se utilizar o seguinte comando:
+
+```bash
+sudo apt install ffmpeg
+```
+
+### Python
+
+O projeto utiliza `python3` e o módulo `venv` para gerenciamento de ambientes virtuais. Para garantir que ambos estejam instalados, o comando de exemplo para Ubuntu é:
+
+```bash
+sudo apt install python3 python3-venv
+```
 
 ## 🔧 Instalação
 
@@ -66,7 +79,7 @@ srt-translate/
     ./bin/extract_subtitle.sh /caminho/para/seu/video.mkv
     ```
 
--   **Para transcrever o áudio de um vídeo e gerar uma legenda:**
+-   **Para transcrever o áudio de um vídeo e gerar uma legenda (em breve):**
     ```bash
     ./bin/transcribe_audio.sh /caminho/para/seu/video.mkv
     ```
