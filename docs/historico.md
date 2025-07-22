@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-22 - Implementação Inicial do Script de Tradução de Legendas
+
+Nesta sessão, foi implementada a primeira versão do sistema de tradução de legendas (`bin/translate_srt.sh`). O trabalho envolveu uma refatoração completa da abordagem anterior, modularizando o código em `src/core`, adotando o uso de variáveis de ambiente (`.env`) para configuração, e aprimorando a comunicação com a API para solicitar respostas em JSON, o que aumenta a robustez do parsing. Também foi implementado um sistema de logging detalhado para prompts e respostas. Esta é uma versão inicial que ainda não foi testada em um cenário real.
+
+---
+
 ## 2025-07-22 - Refatoração e Correção do Script de Extração de Legendas
 
 Nesta sessão, o script `bin/extract_subtitle.sh` foi extensivamente revisado e depurado para funcionar corretamente sem a diretiva `set -euo pipefail`. O complexo `trap ERR` foi removido em favor de um tratamento de erro explícito e mais simples, e a extração de informações das faixas foi refatorada para usar regex, tornando o script mais robusto e legível. O funcionamento foi validado com sucesso.
