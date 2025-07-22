@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-22 - Refatoração e Correção do Script de Extração de Legendas
+
+Nesta sessão, o script `bin/extract_subtitle.sh` foi extensivamente revisado e depurado para funcionar corretamente sem a diretiva `set -euo pipefail`. O complexo `trap ERR` foi removido em favor de um tratamento de erro explícito e mais simples, e a extração de informações das faixas foi refatorada para usar regex, tornando o script mais robusto e legível. O funcionamento foi validado com sucesso.
+
+---
+
 ## 2025-07-21 - Implementação do Script de Extração de Legendas
 
 Nesta sessão, foi criado e depurado o script `bin/extract_subtitle.sh`. O script utiliza `ffmpeg` para identificar e extrair todas as faixas de legenda no formato SRT de arquivos de vídeo MKV, salvando-as no diretório `output/` com nomes padronizados contendo o idioma. O processo incluiu a implementação de validações, tratamento de erros e um ciclo de depuração para garantir a robustez e portabilidade do script.

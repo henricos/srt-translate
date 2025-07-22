@@ -27,14 +27,6 @@ function log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] - $SCRIPT_NAME - $*" >&2
 }
 
-function tratar_erro() {
-    local codigo_saida=$?
-    log "ERRO na linha $1: O comando falhou com o código de saída $codigo_saida."
-    exit "$codigo_saida"
-}
-
-# Trap para capturar erros
-trap 'tratar_erro $LINENO' ERR
 
 function main() {
     # 0. Verificar dependências
@@ -73,8 +65,7 @@ function main() {
     log "Usando arquivo de log temporário para ffmpeg: ${arquivo_log_ffmpeg}"
 
     # ffmpeg emite as informações para stderr. Redirecionamos tudo para um arquivo de log.
-    # O '|| true' garante que o script não pare por causa do 'set -e' se o ffmpeg retornar um erro,
-    # o que é comum ao apenas listar informações.
+    # O comando pode retornar um código de erro ao apenas listar informações, por isso o ignoramos.
     ffmpeg -i "$arquivo_mkv" &> "${arquivo_log_ffmpeg}" || true
 
     local info_faixas
@@ -89,55 +80,62 @@ function main() {
     echo "-------------------------------------------------"
 
     # 5. Extrair todas as legendas no formato SRT
-    log "Procurando por legendas SRT para extrair..."
+    log "Procurando por legendas para extrair..."
 
     local nome_base_arquivo
     nome_base_arquivo=$(basename "$arquivo_mkv" .mkv)
     local legendas_encontradas=0
-    
-    # Itera sobre as linhas que contêm "Subtitle: subrip" usando Process Substitution
-    # para evitar que o loop while seja executado em um subshell.
+    local indice_legenda_ffmpeg=-1
+
+    # Itera sobre todas as faixas de legenda para manter o índice correto para o ffmpeg.
+    # O ffmpeg usa um índice baseado no tipo de faixa (ex: 0:s:0 para a primeira legenda).
     while read -r linha; do
-        ((legendas_encontradas++))
-        
-        # Extrai o índice da faixa (ex: Stream #0:2 -> 2) usando here-string e sed
-        local indice_faixa
-        indice_faixa=$(sed -n 's/.*Stream #[0-9]:\([0-9]*\).*/\1/p' <<< "$linha")
-
-        if [[ -z "$indice_faixa" ]]; then
-            log "AVISO: Não foi possível extrair o índice da faixa da linha, pulando: '${linha}'"
-            continue
+        # O índice de legenda do ffmpeg (0:s:N) só deve ser incrementado para faixas de legenda.
+        if [[ "$linha" == *": Subtitle: "* ]]; then
+            ((indice_legenda_ffmpeg++))
         fi
 
-        # Extrai o código do idioma (ex: (eng) -> eng) usando here-string e sed
-        local codigo_idioma
-        codigo_idioma=$(sed -n 's/.*(\([a-zA-Z]*\)).*/\1/p' <<< "$linha")
-        if [[ -z "$codigo_idioma" ]]; then
-            codigo_idioma="und"
+        # Processa apenas as legendas que são do tipo subrip (SRT).
+        if [[ "$linha" == *"Subtitle: subrip"* ]]; then
+            ((legendas_encontradas++))
+            
+            # Extrai o índice da faixa e o idioma usando regex para mais robustez.
+            # Extrai o índice da faixa e o idioma usando regex para mais robustez.
+            local indice_faixa_geral=""
+            local codigo_idioma="und" # Padrão
+
+            local regex_com_idioma='Stream[[:space:]]#[0-9]:([0-9]+)\(([^)]+)\)'
+            local regex_sem_idioma='Stream[[:space:]]#[0-9]:([0-9]+)'
+
+            if [[ "$linha" =~ $regex_com_idioma ]]; then
+                indice_faixa_geral="${BASH_REMATCH[1]}"
+                codigo_idioma="${BASH_REMATCH[2]}"
+            elif [[ "$linha" =~ $regex_sem_idioma ]]; then
+                indice_faixa_geral="${BASH_REMATCH[1]}"
+            fi
+            
+            # Mapeia códigos comuns para o formato desejado.
+            case "$codigo_idioma" in
+                por) codigo_idioma="pt-BR" ;;
+                eng) codigo_idioma="en" ;;
+                spa) codigo_idioma="es" ;;
+            esac
+
+            log "Legenda SRT encontrada: Faixa Geral #${indice_faixa_geral}, Faixa de Legenda #${indice_legenda_ffmpeg}, Idioma: $codigo_idioma"
+
+            local arquivo_saida="${PASTA_SAIDA}/${nome_base_arquivo}.${codigo_idioma}.srt"
+
+            log "Extraindo faixa de legenda #${indice_legenda_ffmpeg} para: ${arquivo_saida}"
+
+            # Executa o ffmpeg para extrair a legenda.
+            if ! ffmpeg -y -i "$arquivo_mkv" -map "0:s:${indice_legenda_ffmpeg}" -c:s srt "$arquivo_saida" -loglevel error; then
+                log "AVISO: Falha ao extrair a faixa de legenda #${indice_legenda_ffmpeg}. Pulando."
+                rm -f "$arquivo_saida" # Remove arquivo de saída parcial/vazio.
+            else
+                log "Extração da faixa #${indice_faixa_geral} (legenda #${indice_legenda_ffmpeg}) concluída."
+            fi
         fi
-        
-        # Mapeia códigos comuns para o formato desejado
-        case "$codigo_idioma" in
-            por) codigo_idioma="pt-BR" ;;
-            eng) codigo_idioma="en" ;;
-            spa) codigo_idioma="es" ;;
-        esac
-
-        log "Legenda SRT encontrada: Faixa #$indice_faixa, Idioma: $codigo_idioma"
-
-        local arquivo_saida="${PASTA_SAIDA}/${nome_base_arquivo}.${codigo_idioma}.srt"
-
-        log "Extraindo faixa #$indice_faixa para: $arquivo_saida"
-
-        # Executa o ffmpeg para extrair a legenda
-        # -y: sobrescreve o arquivo de saída se ele já existir
-        # -map 0:indice: seleciona a faixa específica
-        # -c:s srt: define o codec de legenda como srt (converte se necessário)
-        # -loglevel error: mostra apenas erros fatais para não poluir o log
-        ffmpeg -y -i "$arquivo_mkv" -map "0:$indice_faixa" -c:s srt "$arquivo_saida" -loglevel error
-        
-        log "Extração da faixa #$indice_faixa concluída."
-    done < <(echo "$info_faixas" | grep -i 'subtitle: subrip')
+    done < <(echo "$info_faixas" | grep -i 'stream #.*: subtitle:')
 
     if [[ "$legendas_encontradas" -eq 0 ]]; then
         log "Nenhuma legenda no formato SRT foi encontrada no arquivo."
