@@ -40,6 +40,41 @@ def _save_log(log_dir: str, file_prefix: str, content: str, log_type: str):
         f.write(content)
     print(f"Log salvo em: {log_file}")
 
+def _attempt_json_fix(json_str: str) -> Dict:
+    """
+    Tenta corrigir um JSON malformado, processando linha a linha.
+    """
+    translations = {}
+    print("Aviso: Tentando recuperar JSON malformado.")
+    
+    # Remove o encapsulamento do objeto e divide em linhas
+    lines = json_str.strip().removeprefix('{').removesuffix('}').splitlines()
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        
+        try:
+            # Tenta encontrar a chave e o valor na linha
+            match = re.match(r'"(\d+)"\s*:\s*(.*)', line)
+            if match:
+                key = int(match.group(1))
+                value_part = match.group(2).strip()
+                
+                # Remove a vírgula final, se houver
+                if value_part.endswith(','):
+                    value_part = value_part[:-1].strip()
+                
+                # Tenta fazer o parse do valor como um string JSON
+                value = json.loads(value_part)
+                translations[key] = value
+        except (json.JSONDecodeError, IndexError):
+            print(f"Aviso: Não foi possível recuperar a linha: {line}")
+            continue
+            
+    return translations
+
 def translate_blocks(
     blocks: List[SubtitleBlock], 
     log_dir: str = "logs", 
@@ -63,9 +98,13 @@ def translate_blocks(
     
     prompt = (
         "Traduza os textos do objeto JSON abaixo para o português do Brasil.\n"
-        "Sua resposta DEVE ser um único objeto JSON, mantendo as mesmas chaves numéricas (como strings) "
+        "Sua resposta DEVE ser um único objeto JSON válido, mantendo as mesmas chaves numéricas (como strings) "
         "e contendo apenas os textos traduzidos como valores.\n"
+        "Certifique-se de que a sintaxe do JSON está perfeita, com todas as vírgulas e chaves nos lugares corretos.\n"
         "Não adicione comentários, explicações ou qualquer texto fora do objeto JSON.\n\n"
+        "Exemplo de formato de resposta esperado:\n"
+        '{\n  "1": "Texto traduzido para a chave 1.",\n  "2": "Texto traduzido para a chave 2."\n}\n\n'
+        "JSON para traduzir:\n"
         f"{json.dumps(texts_to_translate, indent=2, ensure_ascii=False)}"
     )
 
@@ -98,6 +137,11 @@ def translate_blocks(
         # Converte as chaves de volta para inteiros
         return {int(k): v for k, v in translated_data.items()}
 
-    except (json.JSONDecodeError, TypeError) as e:
+    except json.JSONDecodeError as e:
         print(f"Erro ao decodificar a resposta JSON da API: {e}")
+        # Tenta corrigir o JSON se a decodificação inicial falhar
+        fixed_data = _attempt_json_fix(json_str)
+        return fixed_data
+    except TypeError as e:
+        print(f"Erro de tipo ao processar a resposta: {e}")
         return {}

@@ -16,31 +16,45 @@ def handle_translate(args):
 
     # 1. Ler configurações do ambiente
     try:
-        block_size = int(os.getenv("BLOCK_SIZE", 50))
+        block_size = int(os.getenv("BLOCK_SIZE", 100))
     except (ValueError, TypeError):
-        print("Aviso: BLOCK_SIZE inválido. Usando o padrão de 50.")
-        block_size = 50
+        print("Aviso: BLOCK_SIZE inválido. Usando o padrão de 100.")
+        block_size = 100
 
     # 2. Parsear o arquivo SRT
     try:
-        original_blocks = srt_parser.parse_srt_file(args.input_file)
-        if not original_blocks:
+        all_blocks = srt_parser.parse_srt_file(args.input_file)
+        if not all_blocks:
             print("Nenhum bloco de legenda válido encontrado no arquivo.")
             return
     except FileNotFoundError:
         print(f"Erro fatal: Arquivo de entrada '{args.input_file}' não encontrado.")
         sys.exit(1)
 
-    total_blocks = len(original_blocks)
-    print(f"Total de {total_blocks} blocos de legenda encontrados.")
+    # 3. Filtrar blocos se start/end foram fornecidos
+    start_block = args.start_block or 1
+    end_block = args.end_block or len(all_blocks)
+
+    blocks_to_process = [b for b in all_blocks if start_block <= b.index <= end_block]
     
-    translated_blocks = []
+    if not blocks_to_process:
+        print("Nenhum bloco para processar no intervalo especificado.")
+        return
+
+    total_to_process = len(blocks_to_process)
+    print(f"Total de {len(all_blocks)} blocos encontrados. Processando {total_to_process} blocos (de {start_block} a {end_block}).")
     
-    # 3. Processar em lotes
-    for i in range(0, total_blocks, block_size):
+    # Se estivermos processando um subconjunto, carregamos as traduções existentes
+    translated_blocks_map = {b.index: b for b in all_blocks}
+
+    # 4. Processar em lotes
+    for i in range(0, total_to_process, block_size):
         batch_num = (i // block_size) + 1
-        chunk = original_blocks[i:i + block_size]
-        print(f"\n--- Processando Lote {batch_num} (blocos {i+1} a {i+len(chunk)}) ---")
+        chunk = blocks_to_process[i:i + block_size]
+        
+        start_idx = chunk[0].index
+        end_idx = chunk[-1].index
+        print(f"\n--- Processando Lote {batch_num} (blocos {start_idx} a {end_idx}) ---")
 
         file_prefix = f"{os.path.splitext(os.path.basename(args.input_file))[0]}-lote{batch_num:03d}"
         
@@ -54,12 +68,15 @@ def handle_translate(args):
         for original_block in chunk:
             translated_text = translated_texts.get(original_block.index)
             if translated_text:
-                translated_blocks.append(original_block._replace(text=translated_text))
+                translated_blocks_map[original_block.index] = original_block._replace(text=translated_text)
             else:
                 print(f"Aviso: Tradução não encontrada para o bloco #{original_block.index}. Mantendo original.")
-                translated_blocks.append(original_block._replace(text=f"[TRADUÇÃO FALHOU] {original_block.text}"))
+                # Mantém o texto original ou o que já estava lá
+                translated_blocks_map[original_block.index] = original_block
 
-    # 4. Salvar o arquivo final
+    # 5. Salvar o arquivo final
+    final_blocks = [translated_blocks_map[i] for i in sorted(translated_blocks_map.keys())]
+
     if args.output_file:
         output_file = args.output_file
     else:
@@ -67,7 +84,7 @@ def handle_translate(args):
         output_file = f"{base}.pt-BR{ext}"
 
     print(f"\nSalvando arquivo traduzido em: {output_file}")
-    srt_parser.save_srt_file(translated_blocks, output_file)
+    srt_parser.save_srt_file(final_blocks, output_file)
     print("Processo concluído com sucesso.")
 
 
@@ -88,6 +105,16 @@ def main():
     parser_translate.add_argument(
         "--output-file",
         help="(Opcional) Caminho para o arquivo .srt de saída. Se não for fornecido, será gerado automaticamente."
+    )
+    parser_translate.add_argument(
+        "--start-block",
+        type=int,
+        help="(Opcional) Índice do bloco inicial para tradução."
+    )
+    parser_translate.add_argument(
+        "--end-block",
+        type=int,
+        help="(Opcional) Índice do bloco final para tradução."
     )
     parser_translate.set_defaults(func=handle_translate)
 

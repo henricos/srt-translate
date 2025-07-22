@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-22 - Teste e Aumento da Resiliência do Script de Tradução
+
+Nesta sessão, o script `bin/translate_srt.sh` foi testado pela primeira vez em um arquivo de legenda real. O teste revelou uma falha na decodificação de respostas JSON da API. Para resolver o problema, o script `src/core/translator.py` foi aprimorado para ser mais resiliente, com um prompt mais robusto e uma função para recuperar dados de JSONs malformados. Adicionalmente, o script `src/main.py` foi modificado para aceitar um intervalo de blocos, permitindo o reprocessamento de lotes específicos. Após as melhorias, o lote com falha foi reprocessado com sucesso e a tradução do arquivo foi concluída.
+
+---
+
 ## 2025-07-22 - Implementação Inicial do Script de Tradução de Legendas
 
 Nesta sessão, foi implementada a primeira versão do sistema de tradução de legendas (`bin/translate_srt.sh`). O trabalho envolveu uma refatoração completa da abordagem anterior, modularizando o código em `src/core`, adotando o uso de variáveis de ambiente (`.env`) para configuração, e aprimorando a comunicação com a API para solicitar respostas em JSON, o que aumenta a robustez do parsing. Também foi implementado um sistema de logging detalhado para prompts e respostas. Esta é uma versão inicial que ainda não foi testada em um cenário real.
