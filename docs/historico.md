@@ -1,5 +1,12 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-22 - Refatoração Arquitetural do Core da Aplicação
+
+Nesta sessão, foi realizada uma refatoração arquitetural significativa no núcleo da aplicação. A lógica de negócio foi movida de `src/main.py` para módulos especializados em `src/core/`. Foram criados `src/core/io.py` para operações de arquivo e `src/core/models.py` para as estruturas de dados. Toda a orquestração da tradução foi centralizada em `src/core/translator.py`, e `src/main.py` foi simplificado para atuar apenas como o ponto de entrada da CLI, melhorando a modularidade e o desacoplamento do código.
+
+---
+
+
 ## 2025-07-22 - Melhoria da Usabilidade e Documentação de Convenções
 
 Nesta sessão, a experiência de uso e desenvolvimento foi aprimorada. O script `bin/translate_srt.sh` foi modificado para ativar o ambiente virtual `venv` automaticamente, simplificando a execução. Para refletir essa mudança, o `README.md` foi atualizado. Adicionalmente, foi criado e expandido o arquivo `.clinerules/project-conventions.md` para documentar convenções específicas do projeto, como a função do `setup.sh` e a decisão de manter os scripts Bash simples para facilitar a manutenção.

@@ -7,7 +7,7 @@ from typing import List, Dict
 from google import genai
 from google.genai.types import HttpOptions
 
-from src.core.srt_parser import SubtitleBlock
+from src.core.models import SubtitleBlock
 
 # Variáveis de configuração lidas do ambiente
 API_KEY = os.getenv("GEMINI_API_KEY")
@@ -75,35 +75,24 @@ def _attempt_json_fix(json_str: str) -> Dict:
             
     return translations
 
-def translate_blocks(
+def _translate_batch(
     blocks: List[SubtitleBlock], 
-    log_dir: str = "logs", 
-    file_prefix: str = "translation"
+    log_dir: str, 
+    file_prefix: str
 ) -> Dict[int, str]:
     """
-    Traduz uma lista de blocos de legenda usando a API.
-
-    Args:
-        blocks: Lista de SubtitleBlock a serem traduzidos.
-        log_dir: Diretório para salvar os logs.
-        file_prefix: Prefixo para os nomes dos arquivos de log.
-
-    Returns:
-        Um dicionário mapeando o índice do bloco ao texto traduzido.
+    Envia um único lote de blocos para a API de tradução.
     """
     client = get_translation_client()
     
-    # Monta o payload para o prompt, com os textos originais
     texts_to_translate = {str(b.index): b.text.replace("\n", " ") for b in blocks}
     
     prompt = (
         "Traduza os textos do objeto JSON abaixo para o português do Brasil.\n"
         "Sua resposta DEVE ser um único objeto JSON válido, mantendo as mesmas chaves numéricas (como strings) "
         "e contendo apenas os textos traduzidos como valores.\n"
-        "Certifique-se de que a sintaxe do JSON está perfeita, com todas as vírgulas e chaves nos lugares corretos.\n"
-        "Não adicione comentários, explicações ou qualquer texto fora do objeto JSON.\n\n"
-        "Exemplo de formato de resposta esperado:\n"
-        '{\n  "1": "Texto traduzido para a chave 1.",\n  "2": "Texto traduzido para a chave 2."\n}\n\n'
+        "Certifique-se de que a sintaxe do JSON está perfeita.\n"
+        "Não adicione comentários ou texto fora do objeto JSON.\n\n"
         "JSON para traduzir:\n"
         f"{json.dumps(texts_to_translate, indent=2, ensure_ascii=False)}"
     )
@@ -111,10 +100,7 @@ def translate_blocks(
     _save_log(log_dir, file_prefix, prompt, "prompt")
 
     try:
-        response = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=prompt
-        )
+        response = client.models.generate_content(model=MODEL_NAME, contents=prompt)
         raw_response_text = response.text.strip()
     except Exception as e:
         print(f"Erro ao chamar a API de tradução: {e}")
@@ -123,25 +109,109 @@ def translate_blocks(
 
     _save_log(log_dir, file_prefix, raw_response_text, "response")
 
-    # Extrai o JSON da resposta
     try:
-        # A API pode retornar o JSON dentro de um bloco de código markdown
         match = re.search(r'```json\s*(\{.*?\})\s*```', raw_response_text, re.DOTALL)
-        if match:
-            json_str = match.group(1)
-        else:
-            json_str = raw_response_text
+        json_str = match.group(1) if match else raw_response_text
         
         translated_data = json.loads(json_str)
-        
-        # Converte as chaves de volta para inteiros
         return {int(k): v for k, v in translated_data.items()}
-
-    except json.JSONDecodeError as e:
-        print(f"Erro ao decodificar a resposta JSON da API: {e}")
-        # Tenta corrigir o JSON se a decodificação inicial falhar
-        fixed_data = _attempt_json_fix(json_str)
-        return fixed_data
-    except TypeError as e:
-        print(f"Erro de tipo ao processar a resposta: {e}")
+    except json.JSONDecodeError:
+        print("Erro ao decodificar JSON. Tentando correção...")
+        return _attempt_json_fix(json_str)
+    except (TypeError, AttributeError):
+        print("Erro inesperado ao processar a resposta da API.")
         return {}
+
+def translation_pipeline(
+    all_blocks: List[SubtitleBlock],
+    start_block: int,
+    end_block: int,
+    block_size: int,
+    input_file_path: str,
+    project_root: str
+) -> List[SubtitleBlock]:
+    """
+    Orquestra o processo completo de tradução de legendas.
+    """
+    blocks_to_process = [b for b in all_blocks if start_block <= b.index <= end_block]
+    
+    if not blocks_to_process:
+        print("Nenhum bloco para processar no intervalo especificado.")
+        return all_blocks
+
+    total_to_process = len(blocks_to_process)
+    print(f"Total de {len(all_blocks)} blocos encontrados. Processando {total_to_process} blocos (de {start_block} a {end_block}).")
+    
+    translated_blocks_map = {b.index: b for b in all_blocks}
+
+    for i in range(0, total_to_process, block_size):
+        batch_num = (i // block_size) + 1
+        chunk = blocks_to_process[i:i + block_size]
+        
+        start_idx, end_idx = chunk[0].index, chunk[-1].index
+        print(f"\n--- Processando Lote {batch_num} (blocos {start_idx} a {end_idx}) ---")
+
+        file_prefix = f"{os.path.splitext(os.path.basename(input_file_path))[0]}-lote{batch_num:03d}"
+        log_dir = os.path.join(project_root, "logs")
+        
+        translated_texts = _translate_batch(chunk, log_dir=log_dir, file_prefix=file_prefix)
+
+        for original_block in chunk:
+            translated_text = translated_texts.get(original_block.index)
+            if translated_text:
+                translated_blocks_map[original_block.index] = original_block._replace(text=translated_text)
+            else:
+                print(f"Aviso: Tradução não encontrada para o bloco #{original_block.index}. Mantendo original.")
+
+    return [translated_blocks_map[i] for i in sorted(translated_blocks_map.keys())]
+
+
+def run_translation_handler(args, project_root: str):
+    """
+    Ponto de entrada para o processo de tradução a partir dos argumentos da CLI.
+    """
+    from src.core import io  # Import local para evitar dependência circular a nível de módulo
+
+    print(f"Iniciando tradução para o arquivo: {args.input_file}")
+
+    # 1. Ler configurações do ambiente
+    try:
+        block_size = int(os.getenv("BLOCK_SIZE", 100))
+    except (ValueError, TypeError):
+        print("Aviso: BLOCK_SIZE inválido. Usando o padrão de 100.")
+        block_size = 100
+
+    # 2. Ler e parsear o arquivo SRT
+    try:
+        all_blocks = io.read_srt_file(args.input_file)
+        if not all_blocks:
+            print("Nenhum bloco de legenda válido encontrado no arquivo.")
+            return
+    except FileNotFoundError:
+        print(f"Erro fatal: Arquivo de entrada '{args.input_file}' não encontrado.")
+        sys.exit(1)
+
+    # 3. Definir intervalo de blocos
+    start_block = args.start_block or 1
+    end_block = args.end_block or len(all_blocks)
+
+    # 4. Executar o pipeline de tradução
+    final_blocks = translation_pipeline(
+        all_blocks=all_blocks,
+        start_block=start_block,
+        end_block=end_block,
+        block_size=block_size,
+        input_file_path=args.input_file,
+        project_root=project_root
+    )
+
+    # 5. Determinar e salvar o arquivo de saída
+    if args.output_file:
+        output_file = args.output_file
+    else:
+        base, ext = os.path.splitext(args.input_file)
+        output_file = f"{base}.pt-BR{ext}"
+
+    print(f"\nSalvando arquivo traduzido em: {output_file}")
+    io.save_srt_file(final_blocks, output_file)
+    print("Processo concluído com sucesso.")
