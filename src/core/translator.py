@@ -1,5 +1,4 @@
 import os
-import json
 import re
 import sys
 from datetime import datetime
@@ -41,41 +40,6 @@ def _save_log(log_dir: str, file_prefix: str, content: str, log_type: str):
         f.write(content)
     print(f"Log salvo em: {log_file}")
 
-def _attempt_json_fix(json_str: str) -> Dict:
-    """
-    Tenta corrigir um JSON malformado, processando linha a linha.
-    """
-    translations = {}
-    print("Aviso: Tentando recuperar JSON malformado.")
-    
-    # Remove o encapsulamento do objeto e divide em linhas
-    lines = json_str.strip().removeprefix('{').removesuffix('}').splitlines()
-    
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        
-        try:
-            # Tenta encontrar a chave e o valor na linha
-            match = re.match(r'"(\d+)"\s*:\s*(.*)', line)
-            if match:
-                key = int(match.group(1))
-                value_part = match.group(2).strip()
-                
-                # Remove a vírgula final, se houver
-                if value_part.endswith(','):
-                    value_part = value_part[:-1].strip()
-                
-                # Tenta fazer o parse do valor como um string JSON
-                value = json.loads(value_part)
-                translations[key] = value
-        except (json.JSONDecodeError, IndexError):
-            print(f"Aviso: Não foi possível recuperar a linha: {line}")
-            continue
-            
-    return translations
-
 def _translate_batch(
     blocks: List[SubtitleBlock], 
     log_dir: str, 
@@ -86,16 +50,22 @@ def _translate_batch(
     """
     client = get_translation_client()
     
-    texts_to_translate = {str(b.idx): b.text.replace("\n", " ") for b in blocks}
+    # Prepara os textos para tradução no formato "indice| texto"
+    texts_to_translate = [f"{b.idx}| {b.text.replace('\n', ' ')}" for b in blocks]
     
     prompt = (
-        "Traduza os textos do objeto JSON abaixo para o português do Brasil.\n"
-        "Sua resposta DEVE ser um único objeto JSON válido, mantendo as mesmas chaves numéricas (como strings) "
-        "e contendo apenas os textos traduzidos como valores.\n"
-        "Certifique-se de que a sintaxe do JSON está perfeita.\n"
-        "Não adicione comentários ou texto fora do objeto JSON.\n\n"
-        "JSON para traduzir:\n"
-        f"{json.dumps(texts_to_translate, indent=2, ensure_ascii=False)}"
+        "Traduza os textos abaixo para o português do Brasil. Cada linha contém um índice seguido por '|' e o texto original.\n"
+        "Sua resposta DEVE manter o formato 'indice| texto traduzido' para cada linha.\n"
+        "Sua resposta DEVE ser encapsulada entre as tags <TRADUCAO_INICIO> e <TRADUCAO_FIM>.\n"
+        "Não adicione comentários ou texto extra fora dessas tags. Apenas as linhas traduzidas dentro das tags.\n\n"
+        "Textos para traduzir:\n"
+        f"{'\n'.join(texts_to_translate)}\n\n"
+        "Formato de resposta esperado:\n"
+        "<TRADUCAO_INICIO>\n"
+        "1| Texto traduzido do bloco 1\n"
+        "2| Texto traduzido do bloco 2\n"
+        "...\n"
+        "<TRADUCAO_FIM>"
     )
 
     _save_log(log_dir, file_prefix, prompt, "prompt")
@@ -113,29 +83,44 @@ def _translate_batch(
             error_message = f"Erro: A API não retornou um conteúdo de texto válido.{feedback}"
             print(error_message)
             _save_log(log_dir, file_prefix, error_message, "response")
-            return {}
+            return {} # Retorna um dicionário vazio em caso de erro
             
         raw_response_text = response.text.strip()
     except Exception as e:
         print(f"Erro ao chamar a API de tradução: {e}")
         _save_log(log_dir, file_prefix, f"ERRO: {e}", "response")
-        return {}
+        return {} # Retorna um dicionário vazio em caso de erro
 
     _save_log(log_dir, file_prefix, raw_response_text, "response")
 
-    # Extrai o conteúdo JSON de blocos de código markdown, se houver.
-    match = re.search(r'```json\s*(\{.*?\})\s*```', raw_response_text, re.DOTALL)
-    json_str = match.group(1) if match else raw_response_text
-
-    try:
-        translated_data = json.loads(json_str)
-        return {int(k): v for k, v in translated_data.items()}
-    except json.JSONDecodeError:
-        print("Erro ao decodificar JSON. Tentando correção...")
-        return _attempt_json_fix(json_str)
-    except (TypeError, AttributeError):
-        print("Erro inesperado ao processar a resposta da API.")
+    # Extrai o conteúdo entre as tags <TRADUCAO_INICIO> e <TRADUCAO_FIM>
+    match = re.search(r'<TRADUCAO_INICIO>\s*(.*?)\s*<TRADUCAO_FIM>', raw_response_text, re.DOTALL)
+    
+    if not match:
+        print("Erro: As tags de início/fim de tradução não foram encontradas na resposta da API.")
         return {}
+
+    translated_content = match.group(1).strip()
+    translated_data = {}
+    
+    for line in translated_content.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        
+        # Tenta parsear a linha no formato "indice| texto"
+        match_line = re.match(r'(\d+)\|\s*(.*)', line)
+        if match_line:
+            try:
+                key = int(match_line.group(1))
+                value = match_line.group(2).strip()
+                translated_data[key] = value
+            except ValueError:
+                print(f"Aviso: Não foi possível parsear o índice da linha: {line}")
+        else:
+            print(f"Aviso: Linha da resposta não corresponde ao formato esperado 'indice| texto': {line}")
+            
+    return translated_data
 
 def translation_pipeline(
     all_blocks: List[SubtitleBlock],

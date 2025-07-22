@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-22 - Adaptação para Formato de Tradução Resiliente
+
+Nesta sessão, o projeto foi adaptado para um novo formato de comunicação com o modelo de tradução, trocando o JSON por um formato "índice| texto" para aumentar a resiliência contra erros de formatação. A função `_attempt_json_fix` e toda a lógica de parsing de JSON foram removidas de `src/core/translator.py`. O prompt e o parser de resposta foram atualizados para o novo formato, e foram adicionados delimitadores de segurança (`<TRADUCAO_INICIO>` e `<TRADUCAO_FIM>`) para garantir a extração segura da tradução. A importação `json` também foi removida de `src/core/translator.py`.
+
+---
+
 ## 2025-07-22 - Correção de Tipagem e Atualização de Referências
 
 Nesta sessão, foi corrigido um erro de tipagem no `NamedTuple` `SubtitleBlock` em `src/core/models.py`, renomeando o campo `index` para `idx` para evitar conflito com métodos internos do Python. Todas as referências a `block.index` em `src/core/io.py` e `src/core/translator.py` foram atualizadas para `block.idx`, garantindo a consistência e eliminando os erros do Pylance.
