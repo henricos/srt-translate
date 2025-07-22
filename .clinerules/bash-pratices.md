@@ -14,7 +14,6 @@
 
 ```bash
 #!/bin/bash
-set -euo pipefail
 
 # Descrição do script
 # Autor: [nome]
