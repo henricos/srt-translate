@@ -70,6 +70,8 @@ sudo apt install python3 python3-venv
 
 ## 💻 Uso
 
+Os scripts na pasta `bin/` foram projetados para serem auto-suficientes, gerenciando automaticamente a ativação do ambiente virtual (`venv`). Portanto, **não é necessário ativar o ambiente manualmente** antes de executá-los.
+
 -   **Para traduzir um arquivo de legenda:**
     ```bash
     ./bin/translate_srt.sh /caminho/para/sua/legenda.srt

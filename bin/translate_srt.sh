@@ -56,6 +56,19 @@ function main() {
 
     echo "Iniciando tradução para o arquivo: $arquivo_srt"
 
+    # Ativar o ambiente virtual se não estiver ativo
+    if [[ -z "$VIRTUAL_ENV" ]]; then
+        local venv_path="${PROJECT_ROOT}/venv/bin/activate"
+        if [[ -f "$venv_path" ]]; then
+            echo "Ativando ambiente virtual..."
+            source "$venv_path"
+        else
+            echo "Erro: Ambiente virtual 'venv' não encontrado em ${PROJECT_ROOT}." >&2
+            echo "Execute o script 'setup.sh' para criar o ambiente." >&2
+            exit 1
+        fi
+    fi
+
     # Executar o script Python principal
     python3 "${PROJECT_ROOT}/src/main.py" translate --input-file "$arquivo_srt"
 

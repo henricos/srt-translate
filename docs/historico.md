@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-22 - Melhoria da Usabilidade e Documentação de Convenções
+
+Nesta sessão, a experiência de uso e desenvolvimento foi aprimorada. O script `bin/translate_srt.sh` foi modificado para ativar o ambiente virtual `venv` automaticamente, simplificando a execução. Para refletir essa mudança, o `README.md` foi atualizado. Adicionalmente, foi criado e expandido o arquivo `.clinerules/project-conventions.md` para documentar convenções específicas do projeto, como a função do `setup.sh` e a decisão de manter os scripts Bash simples para facilitar a manutenção.
+
+---
+
 ## 2025-07-22 - Teste e Aumento da Resiliência do Script de Tradução
 
 Nesta sessão, o script `bin/translate_srt.sh` foi testado pela primeira vez em um arquivo de legenda real. O teste revelou uma falha na decodificação de respostas JSON da API. Para resolver o problema, o script `src/core/translator.py` foi aprimorado para ser mais resiliente, com um prompt mais robusto e uma função para recuperar dados de JSONs malformados. Adicionalmente, o script `src/main.py` foi modificado para aceitar um intervalo de blocos, permitindo o reprocessamento de lotes específicos. Após as melhorias, o lote com falha foi reprocessado com sucesso e a tradução do arquivo foi concluída.
