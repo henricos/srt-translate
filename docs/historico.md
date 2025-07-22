@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-22 - Refinamento da Verificação de Dependências do Sistema
+
+Nesta sessão, o script `setup.sh` foi ajustado para utilizar `dpkg -s` na verificação de pacotes do sistema como `ffmpeg`, `python3-venv` e `python3-pip`. Esta mudança garante uma checagem mais precisa da instalação dos pacotes APT, corrigindo a sintaxe de teste anterior que não estava surtindo o efeito desejado e melhorando a robustez da configuração do ambiente.
+
+---
+
 ## 2025-07-22 - Melhoria na Verificação de Pré-requisitos e Documentação
 
 Nesta sessão, o script `setup.sh` foi aprimorado para incluir verificações mais robustas de dependências (ffmpeg, python3, venv, pip) e tratamento de erros explícito, garantindo que o processo de configuração seja interrompido em caso de falha. Adicionalmente, o arquivo `README.md` foi atualizado para refletir a necessidade do `pip` como pré-requisito, fornecendo instruções de instalação mais claras para novos ambientes.

@@ -33,12 +33,46 @@ function log() {
     echo -e "${cor}${mensagem}${SEM_COR}"
 }
 
-# Função para tratar erros e sair
+# Função para tratar erros e sair (mantida para logs, mas exit será direto)
 function tratar_erro() {
     local mensagem_erro="$1"
     log "$COR_VERMELHA" "Erro: $mensagem_erro"
     log "$SEM_COR" "A configuração foi interrompida."
-    exit 1
+    # O exit 1 será chamado diretamente nos blocos if para garantir saída imediata
+}
+
+# Função para verificar as dependências do sistema
+function verificar_dependencias_sistema() {
+    log "$SEM_COR" "--> Verificando dependências do sistema..."
+
+    # Função auxiliar para verificar pacotes apt
+    function verificar_pacote_apt() {
+        local pacote="$1"
+        local mensagem_erro="$2"
+        if ! dpkg -s "$pacote" &> /dev/null; then
+            log "$COR_VERMELHA" "Erro: O pacote '$pacote' não foi encontrado. Por favor, instale-o ($mensagem_erro)."
+            log "$SEM_COR" "A configuração foi interrompida."
+            exit 1
+        fi
+    }
+
+    # Verifica ffmpeg
+    verificar_pacote_apt "ffmpeg" "ex: 'sudo apt install ffmpeg'"
+
+    # Verifica Python 3 (o executável)
+    if ! command -v python3 &> /dev/null; then
+        log "$COR_VERMELHA" "Erro: 'python3' não foi encontrado. Por favor, instale-o."
+        log "$SEM_COR" "A configuração foi interrompida."
+        exit 1
+    fi
+
+    # Verifica o pacote python3-venv
+    verificar_pacote_apt "python3-venv" "ex: 'sudo apt install python3-venv'"
+
+    # Verifica o pacote python3-pip
+    verificar_pacote_apt "python3-pip" "ex: 'sudo apt install python3-pip'"
+
+    log "$COR_VERDE" "Dependências do sistema (ffmpeg, Python, venv, pip) verificadas com sucesso."
 }
 
 # Função principal do script
@@ -47,30 +81,15 @@ function main() {
     cd "$SCRIPT_DIR" # Garante que estamos no diretório do script
 
     # 1. Verifica as dependências do sistema
-    log "$SEM_COR" "--> Verificando dependências do sistema..."
-
-    # Verifica ffmpeg
-    if ! command -v ffmpeg &> /dev/null; then
-        tratar_erro "'ffmpeg' não foi encontrado. Por favor, instale-o (ex: 'sudo apt install ffmpeg')."
-    fi
-
-    # Verifica Python 3
-    if ! command -v python3 &> /dev/null; then
-        tratar_erro "'python3' não foi encontrado. Por favor, instale-o."
-    fi
-
-    # Verifica se o módulo venv pode ser invocado
-    if ! python3 -m venv --help &> /dev/null; then
-        tratar_erro "O módulo 'venv' do Python 3 não está disponível. Por favor, instale o pacote python3-venv (ex: 'sudo apt install python3-venv')."
-    fi
-    log "$COR_VERDE" "Dependências do sistema (ffmpeg, Python, venv) verificadas com sucesso."
-
+    verificar_dependencias_sistema
 
     # 2. Cria o ambiente virtual
     if [[ ! -d "$VENV_DIR" ]]; then
         log "$SEM_COR" "--> Criando ambiente virtual em '$VENV_DIR/'..."
         if ! python3 -m venv "$VENV_DIR"; then
-            tratar_erro "Falha ao criar o ambiente virtual. Verifique se o pacote 'python3-venv' (e suas dependências como 'python3-pip') está instalado corretamente."
+            log "$COR_VERMELHA" "Erro: Falha ao criar o ambiente virtual. Verifique se o pacote 'python3-venv' (e suas dependências como 'python3-pip') está instalado corretamente."
+            log "$SEM_COR" "A configuração foi interrompida."
+            exit 1
         fi
         log "$COR_VERDE" "Ambiente virtual criado com sucesso."
     else
@@ -79,14 +98,18 @@ function main() {
 
     # Verifica se o pip existe dentro do venv
     if [[ ! -f "$VENV_DIR/bin/pip" ]]; then
-        tratar_erro "O executável 'pip' não foi encontrado no ambiente virtual. A criação do venv pode ter falhado."
+        log "$COR_VERMELHA" "Erro: O executável 'pip' não foi encontrado no ambiente virtual. A criação do venv pode ter falhado."
+        log "$SEM_COR" "A configuração foi interrompida."
+        exit 1
     fi
 
     # 3. Instala as dependências do requirements.txt
     if [[ -f "$REQUIREMENTS_FILE" ]]; then
         log "$SEM_COR" "--> Instalando dependências do '$REQUIREMENTS_FILE'..."
         if ! "$VENV_DIR/bin/pip" install -r "$REQUIREMENTS_FILE"; then
-            tratar_erro "Falha ao instalar as dependências do '$REQUIREMENTS_FILE'."
+            log "$COR_VERMELHA" "Erro: Falha ao instalar as dependências do '$REQUIREMENTS_FILE'."
+            log "$SEM_COR" "A configuração foi interrompida."
+            exit 1
         fi
         log "$COR_VERDE" "Dependências instaladas com sucesso."
     else
