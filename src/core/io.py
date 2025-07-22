@@ -54,6 +54,6 @@ def save_srt_file(blocks: List[SubtitleBlock], output_path: str):
     """
     with open(output_path, "w", encoding="utf-8") as f:
         for block in blocks:
-            f.write(f"{block.index}\n")
+            f.write(f"{block.idx}\n")
             f.write(f"{block.timestamp}\n")
             f.write(f"{block.text}\n\n")

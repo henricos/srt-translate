@@ -86,7 +86,7 @@ def _translate_batch(
     """
     client = get_translation_client()
     
-    texts_to_translate = {str(b.index): b.text.replace("\n", " ") for b in blocks}
+    texts_to_translate = {str(b.idx): b.text.replace("\n", " ") for b in blocks}
     
     prompt = (
         "Traduza os textos do objeto JSON abaixo para o português do Brasil.\n"
@@ -102,6 +102,19 @@ def _translate_batch(
 
     try:
         response = client.models.generate_content(model=MODEL_NAME, contents=prompt)
+
+        # Valida se a resposta contém o texto esperado antes de prosseguir.
+        # O atributo .text pode ser None se a resposta for bloqueada por segurança.
+        if not response or not response.text:
+            feedback = ""
+            if hasattr(response, 'prompt_feedback'):
+                feedback = f" Causa provável: {response.prompt_feedback}"
+            
+            error_message = f"Erro: A API não retornou um conteúdo de texto válido.{feedback}"
+            print(error_message)
+            _save_log(log_dir, file_prefix, error_message, "response")
+            return {}
+            
         raw_response_text = response.text.strip()
     except Exception as e:
         print(f"Erro ao chamar a API de tradução: {e}")
@@ -110,10 +123,11 @@ def _translate_batch(
 
     _save_log(log_dir, file_prefix, raw_response_text, "response")
 
+    # Extrai o conteúdo JSON de blocos de código markdown, se houver.
+    match = re.search(r'```json\s*(\{.*?\})\s*```', raw_response_text, re.DOTALL)
+    json_str = match.group(1) if match else raw_response_text
+
     try:
-        match = re.search(r'```json\s*(\{.*?\})\s*```', raw_response_text, re.DOTALL)
-        json_str = match.group(1) if match else raw_response_text
-        
         translated_data = json.loads(json_str)
         return {int(k): v for k, v in translated_data.items()}
     except json.JSONDecodeError:
@@ -134,7 +148,7 @@ def translation_pipeline(
     """
     Orquestra o processo completo de tradução de legendas.
     """
-    blocks_to_process = [b for b in all_blocks if start_block <= b.index <= end_block]
+    blocks_to_process = [b for b in all_blocks if start_block <= b.idx <= end_block]
     
     if not blocks_to_process:
         print("Nenhum bloco para processar no intervalo especificado.")
@@ -143,13 +157,13 @@ def translation_pipeline(
     total_to_process = len(blocks_to_process)
     print(f"Total de {len(all_blocks)} blocos encontrados. Processando {total_to_process} blocos (de {start_block} a {end_block}).")
     
-    translated_blocks_map = {b.index: b for b in all_blocks}
+    translated_blocks_map = {b.idx: b for b in all_blocks}
 
     for i in range(0, total_to_process, block_size):
         batch_num = (i // block_size) + 1
         chunk = blocks_to_process[i:i + block_size]
         
-        start_idx, end_idx = chunk[0].index, chunk[-1].index
+        start_idx, end_idx = chunk[0].idx, chunk[-1].idx
         print(f"\n--- Processando Lote {batch_num} (blocos {start_idx} a {end_idx}) ---")
 
         file_prefix = f"{os.path.splitext(os.path.basename(input_file_path))[0]}-lote{batch_num:03d}"
@@ -158,11 +172,11 @@ def translation_pipeline(
         translated_texts = _translate_batch(chunk, log_dir=log_dir, file_prefix=file_prefix)
 
         for original_block in chunk:
-            translated_text = translated_texts.get(original_block.index)
+            translated_text = translated_texts.get(original_block.idx)
             if translated_text:
-                translated_blocks_map[original_block.index] = original_block._replace(text=translated_text)
+                translated_blocks_map[original_block.idx] = original_block._replace(text=translated_text)
             else:
-                print(f"Aviso: Tradução não encontrada para o bloco #{original_block.index}. Mantendo original.")
+                print(f"Aviso: Tradução não encontrada para o bloco #{original_block.idx}. Mantendo original.")
 
     return [translated_blocks_map[i] for i in sorted(translated_blocks_map.keys())]
 

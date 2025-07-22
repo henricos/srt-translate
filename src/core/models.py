@@ -4,6 +4,6 @@ class SubtitleBlock(NamedTuple):
     """
     Representa um bloco de legenda com índice, timestamp e texto.
     """
-    index: int
+    idx: int
     timestamp: str
     text: str

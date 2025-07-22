@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-22 - Correção de Tipagem e Atualização de Referências
+
+Nesta sessão, foi corrigido um erro de tipagem no `NamedTuple` `SubtitleBlock` em `src/core/models.py`, renomeando o campo `index` para `idx` para evitar conflito com métodos internos do Python. Todas as referências a `block.index` em `src/core/io.py` e `src/core/translator.py` foram atualizadas para `block.idx`, garantindo a consistência e eliminando os erros do Pylance.
+
+---
+
 ## 2025-07-22 - Refinamento da Lógica de Nomenclatura de Arquivos de Legenda
 
 Nesta sessão, a lógica para nomear os arquivos de legenda traduzidos em `src/core/translator.py` foi aprimorada. A expressão regular utilizada para detectar o código de idioma no nome do arquivo original foi refinada para suportar formatos compostos (ex: `en-US`, `pt-BR`), garantindo que a substituição para `.pt-BR` seja aplicada corretamente em todos os cenários.
