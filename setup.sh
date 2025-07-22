@@ -33,6 +33,14 @@ function log() {
     echo -e "${cor}${mensagem}${SEM_COR}"
 }
 
+# Função para tratar erros e sair
+function tratar_erro() {
+    local mensagem_erro="$1"
+    log "$COR_VERMELHA" "Erro: $mensagem_erro"
+    log "$SEM_COR" "A configuração foi interrompida."
+    exit 1
+}
+
 # Função principal do script
 function main() {
     log "$SEM_COR" "--> Iniciando a configuração do ambiente..."
@@ -43,16 +51,17 @@ function main() {
 
     # Verifica ffmpeg
     if ! command -v ffmpeg &> /dev/null; then
-        log "$COR_VERMELHA" "Erro: O comando 'ffmpeg' não foi encontrado."
-        log "$SEM_COR" "Por favor, instale o ffmpeg (ex: 'sudo apt install ffmpeg') e tente novamente."
-        exit 1
+        tratar_erro "'ffmpeg' não foi encontrado. Por favor, instale-o (ex: 'sudo apt install ffmpeg')."
     fi
 
-    # Verifica Python 3 e venv
+    # Verifica Python 3
+    if ! command -v python3 &> /dev/null; then
+        tratar_erro "'python3' não foi encontrado. Por favor, instale-o."
+    fi
+
+    # Verifica se o módulo venv pode ser invocado
     if ! python3 -m venv --help &> /dev/null; then
-        log "$COR_VERMELHA" "Erro: O comando 'python3' não está disponível ou o módulo 'venv' não pôde ser encontrado."
-        log "$SEM_COR" "Por favor, instale o Python 3 e o pacote python3-venv (ex: 'sudo apt install python3-venv') e tente novamente."
-        exit 1
+        tratar_erro "O módulo 'venv' do Python 3 não está disponível. Por favor, instale o pacote python3-venv (ex: 'sudo apt install python3-venv')."
     fi
     log "$COR_VERDE" "Dependências do sistema (ffmpeg, Python, venv) verificadas com sucesso."
 
@@ -60,19 +69,28 @@ function main() {
     # 2. Cria o ambiente virtual
     if [[ ! -d "$VENV_DIR" ]]; then
         log "$SEM_COR" "--> Criando ambiente virtual em '$VENV_DIR/'..."
-        python3 -m venv "$VENV_DIR"
-        log "$COR_VERDE" "Ambiente virtual criado."
+        if ! python3 -m venv "$VENV_DIR"; then
+            tratar_erro "Falha ao criar o ambiente virtual. Verifique se o pacote 'python3-venv' (e suas dependências como 'python3-pip') está instalado corretamente."
+        fi
+        log "$COR_VERDE" "Ambiente virtual criado com sucesso."
     else
         log "$SEM_COR" "--> Ambiente virtual '$VENV_DIR/' já existe."
+    fi
+
+    # Verifica se o pip existe dentro do venv
+    if [[ ! -f "$VENV_DIR/bin/pip" ]]; then
+        tratar_erro "O executável 'pip' não foi encontrado no ambiente virtual. A criação do venv pode ter falhado."
     fi
 
     # 3. Instala as dependências do requirements.txt
     if [[ -f "$REQUIREMENTS_FILE" ]]; then
         log "$SEM_COR" "--> Instalando dependências do '$REQUIREMENTS_FILE'..."
-        "$VENV_DIR/bin/pip" install -r "$REQUIREMENTS_FILE"
+        if ! "$VENV_DIR/bin/pip" install -r "$REQUIREMENTS_FILE"; then
+            tratar_erro "Falha ao instalar as dependências do '$REQUIREMENTS_FILE'."
+        fi
         log "$COR_VERDE" "Dependências instaladas com sucesso."
     else
-        log "$COR_VERMELHA" "Erro: Arquivo '$REQUIREMENTS_FILE' não encontrado. Nenhuma dependência foi instalada."
+        log "$COR_AMARELA" "Aviso: Arquivo '$REQUIREMENTS_FILE' não encontrado. Nenhuma dependência foi instalada."
     fi
     
     # 4. Verifica o arquivo de configuração .env

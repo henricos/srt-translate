@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-22 - Melhoria na Verificação de Pré-requisitos e Documentação
+
+Nesta sessão, o script `setup.sh` foi aprimorado para incluir verificações mais robustas de dependências (ffmpeg, python3, venv, pip) e tratamento de erros explícito, garantindo que o processo de configuração seja interrompido em caso de falha. Adicionalmente, o arquivo `README.md` foi atualizado para refletir a necessidade do `pip` como pré-requisito, fornecendo instruções de instalação mais claras para novos ambientes.
+
+---
+
 ## 2025-07-22 - Adaptação para Formato de Tradução Resiliente
 
 Nesta sessão, o projeto foi adaptado para um novo formato de comunicação com o modelo de tradução, trocando o JSON por um formato "índice| texto" para aumentar a resiliência contra erros de formatação. A função `_attempt_json_fix` e toda a lógica de parsing de JSON foram removidas de `src/core/translator.py`. O prompt e o parser de resposta foram atualizados para o novo formato, e foram adicionados delimitadores de segurança (`<TRADUCAO_INICIO>` e `<TRADUCAO_FIM>`) para garantir a extração segura da tradução. A importação `json` também foi removida de `src/core/translator.py`.

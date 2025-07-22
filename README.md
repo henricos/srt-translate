@@ -39,12 +39,12 @@ O `ffmpeg` é essencial para a manipulação de arquivos de áudio e vídeo, per
 sudo apt install ffmpeg
 ```
 
-### Python
+### Python e Pip
 
-O projeto utiliza `python3` e o módulo `venv` para gerenciamento de ambientes virtuais. Para garantir que ambos estejam instalados, o comando de exemplo para Ubuntu é:
+O projeto utiliza `python3` para execução, `venv` para criar ambientes virtuais e `pip` para gerenciar as dependências. Em sistemas baseados em Debian/Ubuntu, o `python3-venv` geralmente inclui o `pip`. Para garantir que todos os componentes necessários estejam instalados, o comando de exemplo é:
 
 ```bash
-sudo apt install python3 python3-venv
+sudo apt install python3 python3-venv python3-pip
 ```
 
 ## 🔧 Instalação
