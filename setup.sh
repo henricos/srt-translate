@@ -8,12 +8,6 @@
 # Este script verifica as dependências, cria o ambiente virtual Python
 # e instala os pacotes necessários do requirements.txt.
 
-# Opções de segurança:
-# -e: sai imediatamente se um comando falhar
-# -u: trata variáveis não definidas como um erro
-# -o pipefail: o status de saída de um pipe é o do último comando que falhou
-set -euo pipefail
-
 # --- Constantes ---
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_NAME="$(basename "$0")"

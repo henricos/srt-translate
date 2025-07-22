@@ -1,5 +1,4 @@
 #!/bin/bash
-set -euo pipefail
 
 # Descrição: Extrai legendas SRT de um arquivo de vídeo MKV.
 # Autor: Henrico Scaranello

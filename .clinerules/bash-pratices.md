@@ -10,14 +10,6 @@
 #!/bin/bash
 ```
 
-### Opções de Segurança
-```bash
-set -euo pipefail
-# -e: sai se algum comando falhar
-# -u: sai se usar variável não definida
-# -o pipefail: falha em pipes se algum comando falhar
-```
-
 ## Estrutura de Script
 
 ```bash
