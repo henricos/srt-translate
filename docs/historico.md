@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-22 - Refinamento da Lógica de Nomenclatura de Arquivos de Legenda
+
+Nesta sessão, a lógica para nomear os arquivos de legenda traduzidos em `src/core/translator.py` foi aprimorada. A expressão regular utilizada para detectar o código de idioma no nome do arquivo original foi refinada para suportar formatos compostos (ex: `en-US`, `pt-BR`), garantindo que a substituição para `.pt-BR` seja aplicada corretamente em todos os cenários.
+
+---
+
 ## 2025-07-22 - Refatoração Arquitetural do Core da Aplicação
 
 Nesta sessão, foi realizada uma refatoração arquitetural significativa no núcleo da aplicação. A lógica de negócio foi movida de `src/main.py` para módulos especializados em `src/core/`. Foram criados `src/core/io.py` para operações de arquivo e `src/core/models.py` para as estruturas de dados. Toda a orquestração da tradução foi centralizada em `src/core/translator.py`, e `src/main.py` foi simplificado para atuar apenas como o ponto de entrada da CLI, melhorando a modularidade e o desacoplamento do código.

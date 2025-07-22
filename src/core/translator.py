@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import sys
 from datetime import datetime
 from typing import List, Dict
 
@@ -210,7 +211,17 @@ def run_translation_handler(args, project_root: str):
         output_file = args.output_file
     else:
         base, ext = os.path.splitext(args.input_file)
-        output_file = f"{base}.pt-BR{ext}"
+        
+        # Verifica se o nome base termina com um código de idioma (ex: .en, .pt-BR)
+        match = re.search(r'\.([a-zA-Z]{2,3}(-[a-zA-Z]{2})?)$', base)
+        
+        if match:
+            # Se encontrou, substitui o código de idioma por .pt-BR
+            base_sem_idioma = base[:match.start()]
+            output_file = f"{base_sem_idioma}.pt-BR{ext}"
+        else:
+            # Se não, apenas adiciona .pt-BR
+            output_file = f"{base}.pt-BR{ext}"
 
     print(f"\nSalvando arquivo traduzido em: {output_file}")
     io.save_srt_file(final_blocks, output_file)
