@@ -1,0 +1,130 @@
+import re
+import time
+import os
+import sys
+from google import genai
+from google.genai.types import HttpOptions
+
+API_KEY = "SUA-CHAVE-AQUI"
+
+client = genai.Client(
+    http_options=HttpOptions(api_version="v1"),
+    api_key=API_KEY
+)
+
+MODEL = "gemini-2.5-flash"
+BLOCOS_POR_REQUISICAO = 100
+
+def parse_srt(path):
+    with open(path, "r", encoding="utf-8") as f:
+        content = f.read()
+    blocos = re.findall(r"(\d+)\n([\d:,]+ --> [\d:,]+)\n(.+?)(?=\n\n|\Z)", content, re.DOTALL)
+    return [(int(num), tempo, texto.strip().replace("\n", " ")) for num, tempo, texto in blocos]
+
+def montar_prompt(blocos):
+    partes = []
+    for i, (_, _, texto) in enumerate(blocos, start=1):
+        partes.append(f"#{i}\n{texto}")
+    return "\n\n".join(partes)
+
+def traduzir_lote(textos):
+    prompt = (
+        "Traduza os textos numerados abaixo para português do Brasil.\n"
+        "Apenas traduza o texto de cada item, mantendo a numeração com #.\n"
+        "Não altere a ordem, nem adicione comentários.\n\n"
+        f"{textos}"
+    )
+    try:
+        resposta = client.models.generate_content(
+            model=MODEL,
+            contents=prompt
+        )
+        return resposta.text.strip()
+    except Exception as e:
+        print("Erro ao traduzir lote:", e)
+        return None
+
+def salvar_resposta_bruta(texto, nome_base, lote_num):
+    nome = f"{nome_base}-resposta-lote{lote_num:03}.txt"
+    with open(nome, "w", encoding="utf-8") as f:
+        f.write(texto if texto else "[RESPOSTA VAZIA]")
+    print(f"Resposta bruta salva: {nome}")
+
+def extrair_blocos_traduzidos(resposta_bruta, tamanho_esperado):
+    """
+    Extrai blocos do tipo:
+    #1
+    Texto traduzido
+
+    Retorna uma lista de textos em ordem, preenchendo ausentes com placeholder.
+    """
+    blocos = {}
+    partes = re.split(r"(?:^|\n)#\s*(\d+)\s*\n", resposta_bruta.strip())
+
+    for i in range(1, len(partes) - 1, 2):
+        try:
+            idx = int(partes[i])
+            texto = partes[i + 1].strip().replace("\n", " ")
+            blocos[idx] = texto
+        except Exception as e:
+            print(f"Erro ao processar bloco #{partes[i]}: {e}")
+
+    resultado = []
+    for i in range(1, tamanho_esperado + 1):
+        resultado.append(blocos.get(i, "[TRADUÇÃO AUSENTE]"))
+    return resultado
+
+def processar_traducao(blocos, caminho_entrada):
+    resultado = []
+    total = len(blocos)
+    base_nome, _ = os.path.splitext(caminho_entrada)
+
+    for i in range(0, total, BLOCOS_POR_REQUISICAO):
+        grupo = blocos[i:i + BLOCOS_POR_REQUISICAO]
+        print(f"Traduzindo blocos {i + 1} até {i + len(grupo)}...")
+        prompt_texto = montar_prompt(grupo)
+        traducao_bruta = traduzir_lote(prompt_texto)
+
+        # Salvar retorno bruto da API para debug posterior
+        salvar_resposta_bruta(traducao_bruta, base_nome, i // BLOCOS_POR_REQUISICAO + 1)
+
+        if not traducao_bruta:
+            resultado.extend([(num, tempo, "[ERRO DE TRADUÇÃO]") for (num, tempo, _) in grupo])
+            continue
+
+        blocos_textos = extrair_blocos_traduzidos(traducao_bruta, len(grupo))
+
+        for idx, (num, tempo, _) in enumerate(grupo):
+            texto_traduzido = blocos_textos[idx]
+            if texto_traduzido == "[TRADUÇÃO AUSENTE]":
+                print(f"⚠️ Tradução ausente para bloco real #{num} (posição {idx + 1})")
+            resultado.append((num, tempo, texto_traduzido))
+
+        time.sleep(0.5)
+    return resultado
+
+def salvar(blocos, saida):
+    with open(saida, "w", encoding="utf-8") as f:
+        for num, tempo, texto in blocos:
+            f.write(f"{num}\n{tempo}\n{texto}\n\n")
+
+def gerar_nome_saida(caminho_entrada):
+    base, ext = os.path.splitext(caminho_entrada)
+    return f"{base}.pt-BR{ext}"
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Uso: python traduzir_srt_gemini.py arquivo.srt")
+        sys.exit(1)
+
+    caminho_entrada = sys.argv[1]
+    caminho_saida = gerar_nome_saida(caminho_entrada)
+
+    print(f"Lendo: {caminho_entrada}")
+    blocos = parse_srt(caminho_entrada)
+
+    print("Iniciando tradução com gemini-2.5-flash...")
+    blocos_traduzidos = processar_traducao(blocos, caminho_entrada)
+
+    salvar(blocos_traduzidos, caminho_saida)
+    print(f"Arquivo final salvo em: {caminho_saida}")
