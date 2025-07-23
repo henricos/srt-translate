@@ -53,6 +53,14 @@ def _translate_batch(
     # Prepara os textos para tradução no formato "indice| texto"
     texts_to_translate = [f"{f.idx}| {f.text.replace('\n', ' ')}" for f in falas]
     
+    # Constrói um exemplo dinâmico para o formato de resposta
+    # para guiar o modelo a usar os índices corretos do lote.
+    exemplo_resposta = '\n'.join([
+        f"{falas[0].idx}| Texto traduzido da fala {falas[0].idx}",
+        f"{falas[1].idx}| Texto traduzido da fala {falas[1].idx}",
+        "..."
+    ])
+
     prompt = (
         "Traduza os textos abaixo para o português do Brasil. Cada linha contém um índice seguido por '|' e o texto original.\n"
         "Sua resposta DEVE manter o formato 'indice| texto traduzido' para cada linha.\n"
@@ -62,9 +70,7 @@ def _translate_batch(
         f"{'\n'.join(texts_to_translate)}\n\n"
         "Formato de resposta esperado:\n"
         "<TRADUCAO_INICIO>\n"
-        "1| Texto traduzido da fala 1\n"
-        "2| Texto traduzido da fala 2\n"
-        "...\n"
+        f"{exemplo_resposta}\n"
         "<TRADUCAO_FIM>"
     )
 

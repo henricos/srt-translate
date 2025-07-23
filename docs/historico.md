@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-23 - Correção do Bug de Parse em Lotes de Tradução
+
+Nesta sessão, foi corrigido um bug crítico no script de tradução que causava falha no parse de respostas da API a partir do segundo lote. O problema foi identificado como um exemplo estático no prompt que não considerava os índices reais das falas, levando a uma dessincronização. A solução envolveu a criação de um exemplo de resposta dinâmico no prompt, garantindo que o modelo de linguagem retorne os índices corretos para cada lote e permitindo o processamento completo e bem-sucedido de arquivos de legenda grandes.
+
+---
+
 ## 2025-07-23 - Padronização da Nomenclatura Interna do Código
 
 Nesta sessão, foi realizada uma refatoração completa da nomenclatura interna para aumentar a clareza e consistência do código. O termo "bloco" foi substituído por "fala" em todos os arquivos Python e scripts Bash. A variável de ambiente `BLOCK_SIZE` foi renomeada para `LOTE_SIZE`, e os argumentos de linha de comando foram ajustados para `--fala-inicial` e `--fala-final`, alinhando toda a base de código a uma terminologia mais intuitiva e coesa.
