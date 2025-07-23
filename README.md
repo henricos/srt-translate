@@ -8,34 +8,6 @@ Este projeto é um canivete suíço para quem precisa de legendas em português.
 
 Não importa qual o seu ponto de partida, o `srt-translate` tem uma solução. Existem três pontos de partida possíveis para o processo, mas todos eles convergem para a mesma etapa final: a tradução.
 
-O diagrama abaixo (feito com a sintaxe `Mermaid`, comum em renderizadores Markdown como o do GitHub) ilustra os fluxos de trabalho:
-
-```mermaid
-graph TD
-    subgraph "Ponto de Partida 1: Você só tem o vídeo"
-        A[Vídeo com áudio original] -- "./bin/transcribe_audio.sh" --> B{Legenda no idioma original .srt};
-    end
-
-    subgraph "Ponto de Partida 2: Vídeo com legenda embutida"
-        C[Vídeo .mkv com legenda] -- "./bin/extract_subtitle.sh" --> D{Legenda no idioma original .srt};
-    end
-
-    subgraph "Ponto de Partida 3: Você já tem a legenda"
-        E[Arquivo de legenda .srt] --> F{Legenda no idioma original .srt};
-    end
-
-    subgraph "Etapa Final: A Tradução"
-        B -- "./bin/translate_srt.sh" --> G[✨ Legenda Traduzida PT-BR .srt];
-        D -- "./bin/translate_srt.sh" --> G;
-        F -- "./bin/translate_srt.sh" --> G;
-    end
-
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style C fill:#f9f,stroke:#333,stroke-width:2px
-    style E fill:#f9f,stroke:#333,stroke-width:2px
-    style G fill:#bbf,stroke:#333,stroke-width:2px
-```
-
 1.  **Ponto de Partida 1: Você só tem o vídeo**
     *   **Problema:** Você tem um arquivo de vídeo (um filme, uma aula, etc.) com o áudio em outro idioma, mas sem nenhuma legenda.
     *   **Solução:** Execute o script `transcribe_audio.sh`. Ele extrai o áudio, gera um arquivo de legenda (`.srt`) no idioma original e o prepara para a etapa de tradução.
