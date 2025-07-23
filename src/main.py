@@ -20,8 +20,8 @@ def main():
     parser_translate = subparsers.add_parser("translate", help="Traduzir um arquivo .srt.")
     parser_translate.add_argument("--input-file", required=True, help="Caminho para o arquivo .srt de entrada.")
     parser_translate.add_argument("--output-file", help="(Opcional) Caminho para o arquivo .srt de saída.")
-    parser_translate.add_argument("--start-block", type=int, help="(Opcional) Índice do bloco inicial.")
-    parser_translate.add_argument("--end-block", type=int, help="(Opcional) Índice do bloco final.")
+    parser_translate.add_argument("--fala-inicial", type=int, dest="start_speech", help="(Opcional) Índice da fala inicial.")
+    parser_translate.add_argument("--fala-final", type=int, dest="end_speech", help="(Opcional) Índice da fala final.")
     
     # Define a função que será chamada, passando os argumentos e o project_root
     parser_translate.set_defaults(func=lambda args: run_translation_handler(args, project_root))

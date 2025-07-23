@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-23 - Padronização da Nomenclatura Interna do Código
+
+Nesta sessão, foi realizada uma refatoração completa da nomenclatura interna para aumentar a clareza e consistência do código. O termo "bloco" foi substituído por "fala" em todos os arquivos Python e scripts Bash. A variável de ambiente `BLOCK_SIZE` foi renomeada para `LOTE_SIZE`, e os argumentos de linha de comando foram ajustados para `--fala-inicial` e `--fala-final`, alinhando toda a base de código a uma terminologia mais intuitiva e coesa.
+
+---
+
 ## 2025-07-23 - Melhoria da Documentação e Storytelling do Projeto
 
 Nesta sessão, o arquivo `README.md` foi significativamente aprimorado para melhorar a experiência de novos usuários. Foi introduzida uma narrativa de storytelling para explicar o propósito do projeto, um diagrama `Mermaid` foi adicionado para ilustrar visualmente os três possíveis fluxos de trabalho (partindo de um vídeo, de uma legenda embutida ou de um arquivo `.srt`), e a seção de "Uso" foi reorganizada para refletir essa estrutura de "Pontos de Partida" e "Etapa Final", tornando os comandos mais intuitivos.

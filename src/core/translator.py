@@ -7,7 +7,7 @@ from typing import List, Dict
 from google import genai
 from google.genai.types import HttpOptions
 
-from src.core.models import SubtitleBlock
+from src.core.models import SubtitleSpeech
 
 # Variáveis de configuração lidas do ambiente
 API_KEY = os.getenv("GEMINI_API_KEY")
@@ -41,17 +41,17 @@ def _save_log(log_dir: str, file_prefix: str, content: str, log_type: str):
     print(f"Log salvo em: {log_file}")
 
 def _translate_batch(
-    blocks: List[SubtitleBlock], 
-    log_dir: str, 
+    falas: List[SubtitleSpeech],
+    log_dir: str,
     file_prefix: str
 ) -> Dict[int, str]:
     """
-    Envia um único lote de blocos para a API de tradução.
+    Envia um único lote de falas para a API de tradução.
     """
     client = get_translation_client()
     
     # Prepara os textos para tradução no formato "indice| texto"
-    texts_to_translate = [f"{b.idx}| {b.text.replace('\n', ' ')}" for b in blocks]
+    texts_to_translate = [f"{f.idx}| {f.text.replace('\n', ' ')}" for f in falas]
     
     prompt = (
         "Traduza os textos abaixo para o português do Brasil. Cada linha contém um índice seguido por '|' e o texto original.\n"
@@ -62,8 +62,8 @@ def _translate_batch(
         f"{'\n'.join(texts_to_translate)}\n\n"
         "Formato de resposta esperado:\n"
         "<TRADUCAO_INICIO>\n"
-        "1| Texto traduzido do bloco 1\n"
-        "2| Texto traduzido do bloco 2\n"
+        "1| Texto traduzido da fala 1\n"
+        "2| Texto traduzido da fala 2\n"
         "...\n"
         "<TRADUCAO_FIM>"
     )
@@ -123,47 +123,47 @@ def _translate_batch(
     return translated_data
 
 def translation_pipeline(
-    all_blocks: List[SubtitleBlock],
-    start_block: int,
-    end_block: int,
-    block_size: int,
+    todas_as_falas: List[SubtitleSpeech],
+    fala_inicial: int,
+    fala_final: int,
+    tamanho_lote: int,
     input_file_path: str,
     project_root: str
-) -> List[SubtitleBlock]:
+) -> List[SubtitleSpeech]:
     """
     Orquestra o processo completo de tradução de legendas.
     """
-    blocks_to_process = [b for b in all_blocks if start_block <= b.idx <= end_block]
+    falas_a_processar = [f for f in todas_as_falas if fala_inicial <= f.idx <= fala_final]
     
-    if not blocks_to_process:
-        print("Nenhum bloco para processar no intervalo especificado.")
-        return all_blocks
+    if not falas_a_processar:
+        print("Nenhuma fala para processar no intervalo especificado.")
+        return todas_as_falas
 
-    total_to_process = len(blocks_to_process)
-    print(f"Total de {len(all_blocks)} blocos encontrados. Processando {total_to_process} blocos (de {start_block} a {end_block}).")
+    total_a_processar = len(falas_a_processar)
+    print(f"Total de {len(todas_as_falas)} falas encontradas. Processando {total_a_processar} falas (de {fala_inicial} a {fala_final}).")
     
-    translated_blocks_map = {b.idx: b for b in all_blocks}
+    mapa_falas_traduzidas = {f.idx: f for f in todas_as_falas}
 
-    for i in range(0, total_to_process, block_size):
-        batch_num = (i // block_size) + 1
-        chunk = blocks_to_process[i:i + block_size]
+    for i in range(0, total_a_processar, tamanho_lote):
+        num_lote = (i // tamanho_lote) + 1
+        lote = falas_a_processar[i:i + tamanho_lote]
         
-        start_idx, end_idx = chunk[0].idx, chunk[-1].idx
-        print(f"\n--- Processando Lote {batch_num} (blocos {start_idx} a {end_idx}) ---")
+        start_idx, end_idx = lote[0].idx, lote[-1].idx
+        print(f"\n--- Processando Lote {num_lote} (falas {start_idx} a {end_idx}) ---")
 
-        file_prefix = f"{os.path.splitext(os.path.basename(input_file_path))[0]}-lote{batch_num:03d}"
+        file_prefix = f"{os.path.splitext(os.path.basename(input_file_path))[0]}-lote{num_lote:03d}"
         log_dir = os.path.join(project_root, "logs")
         
-        translated_texts = _translate_batch(chunk, log_dir=log_dir, file_prefix=file_prefix)
+        textos_traduzidos = _translate_batch(lote, log_dir=log_dir, file_prefix=file_prefix)
 
-        for original_block in chunk:
-            translated_text = translated_texts.get(original_block.idx)
-            if translated_text:
-                translated_blocks_map[original_block.idx] = original_block._replace(text=translated_text)
+        for fala_original in lote:
+            texto_traduzido = textos_traduzidos.get(fala_original.idx)
+            if texto_traduzido:
+                mapa_falas_traduzidas[fala_original.idx] = fala_original._replace(text=texto_traduzido)
             else:
-                print(f"Aviso: Tradução não encontrada para o bloco #{original_block.idx}. Mantendo original.")
+                print(f"Aviso: Tradução não encontrada para a fala #{fala_original.idx}. Mantendo original.")
 
-    return [translated_blocks_map[i] for i in sorted(translated_blocks_map.keys())]
+    return [mapa_falas_traduzidas[i] for i in sorted(mapa_falas_traduzidas.keys())]
 
 
 def run_translation_handler(args, project_root: str):
@@ -176,31 +176,31 @@ def run_translation_handler(args, project_root: str):
 
     # 1. Ler configurações do ambiente
     try:
-        block_size = int(os.getenv("BLOCK_SIZE", 100))
+        tamanho_lote = int(os.getenv("LOTE_SIZE", 100))
     except (ValueError, TypeError):
-        print("Aviso: BLOCK_SIZE inválido. Usando o padrão de 100.")
-        block_size = 100
+        print("Aviso: LOTE_SIZE inválido. Usando o padrão de 100.")
+        tamanho_lote = 100
 
     # 2. Ler e parsear o arquivo SRT
     try:
-        all_blocks = io.read_srt_file(args.input_file)
-        if not all_blocks:
-            print("Nenhum bloco de legenda válido encontrado no arquivo.")
+        todas_as_falas = io.read_srt_file(args.input_file)
+        if not todas_as_falas:
+            print("Nenhuma fala de legenda válida encontrada no arquivo.")
             return
     except FileNotFoundError:
         print(f"Erro fatal: Arquivo de entrada '{args.input_file}' não encontrado.")
         sys.exit(1)
 
-    # 3. Definir intervalo de blocos
-    start_block = args.start_block or 1
-    end_block = args.end_block or len(all_blocks)
+    # 3. Definir intervalo de falas
+    fala_inicial = args.start_speech or 1
+    fala_final = args.end_speech or len(todas_as_falas)
 
     # 4. Executar o pipeline de tradução
-    final_blocks = translation_pipeline(
-        all_blocks=all_blocks,
-        start_block=start_block,
-        end_block=end_block,
-        block_size=block_size,
+    falas_finais = translation_pipeline(
+        todas_as_falas=todas_as_falas,
+        fala_inicial=fala_inicial,
+        fala_final=fala_final,
+        tamanho_lote=tamanho_lote,
         input_file_path=args.input_file,
         project_root=project_root
     )
@@ -223,5 +223,5 @@ def run_translation_handler(args, project_root: str):
             output_file = f"{base}.pt-BR{ext}"
 
     print(f"\nSalvando arquivo traduzido em: {output_file}")
-    io.save_srt_file(final_blocks, output_file)
+    io.save_srt_file(falas_finais, output_file)
     print("Processo concluído com sucesso.")

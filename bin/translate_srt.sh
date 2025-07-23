@@ -10,27 +10,62 @@ readonly SCRIPT_NAME="$(basename "$0")"
 
 # Função para mostrar ajuda
 function mostrar_ajuda() {
-    echo "Uso: $SCRIPT_NAME <caminho_para_arquivo_srt>"
+    echo "Uso: $SCRIPT_NAME [opções] <caminho_para_arquivo_srt>"
     echo
     echo "Este script traduz o conteúdo de um arquivo .srt para português do Brasil."
     echo "Requer que um arquivo .env exista na pasta 'config' com as chaves da API."
+    echo
+    echo "Opções:"
+    echo "  --fala-inicial <número>   Índice da primeira fala a ser traduzida."
+    echo "  --fala-final <número>     Índice da última fala a ser traduzida."
+    echo "  -h, --help                Mostra esta ajuda."
 }
 
 # Função principal
 function main() {
-    # Validar número de argumentos
-    if [[ "$#" -ne 1 ]]; then
-        echo "Erro: Número incorreto de argumentos." >&2
+    # --- Parsing de Argumentos ---
+    local arquivo_srt=""
+    local args_python=()
+
+    # Loop para processar todos os argumentos
+    while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+            -h|--help)
+                mostrar_ajuda
+                exit 0
+                ;;
+            --fala-inicial|--fala-final)
+                if [[ -z "$2" || "$2" == -* ]]; then
+                    echo "Erro: O argumento '$1' requer um valor numérico." >&2
+                    exit 1
+                fi
+                # Adiciona o argumento e seu valor para o script python
+                args_python+=("$1" "$2")
+                shift 2 # Pula o argumento e seu valor
+                ;;
+            -*)
+                echo "Erro: Opção desconhecida '$1'" >&2
+                mostrar_ajuda
+                exit 1
+                ;;
+            *)
+                # Assume que o último argumento sem flag é o arquivo srt
+                if [[ -n "$arquivo_srt" ]]; then
+                    echo "Erro: Apenas um arquivo .srt pode ser especificado." >&2
+                    mostrar_ajuda
+                    exit 1
+                fi
+                arquivo_srt="$1"
+                shift
+                ;;
+        esac
+    done
+
+    # Validar se o arquivo SRT foi fornecido
+    if [[ -z "$arquivo_srt" ]]; then
+        echo "Erro: O caminho para o arquivo .srt não foi fornecido." >&2
         mostrar_ajuda
         exit 1
-    fi
-
-    local arquivo_srt="$1"
-
-    # Validar se o argumento é -h ou --help
-    if [[ "$arquivo_srt" == "-h" || "$arquivo_srt" == "--help" ]]; then
-        mostrar_ajuda
-        exit 0
     fi
 
     # Validar se o arquivo de entrada existe
@@ -70,7 +105,7 @@ function main() {
     fi
 
     # Executar o script Python principal
-    python3 "${PROJECT_ROOT}/src/main.py" translate --input-file "$arquivo_srt"
+    python3 "${PROJECT_ROOT}/src/main.py" translate --input-file "$arquivo_srt" "${args_python[@]}"
 
     echo "Tradução concluída."
 }

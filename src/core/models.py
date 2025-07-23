@@ -1,8 +1,8 @@
 from typing import NamedTuple
 
-class SubtitleBlock(NamedTuple):
+class SubtitleSpeech(NamedTuple):
     """
-    Representa um bloco de legenda com índice, timestamp e texto.
+    Representa uma fala da legenda com índice, timestamp e texto.
     """
     idx: int
     timestamp: str
