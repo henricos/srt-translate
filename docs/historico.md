@@ -1,5 +1,12 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-23 - Melhoria da Documentação e Storytelling do Projeto
+
+Nesta sessão, o arquivo `README.md` foi significativamente aprimorado para melhorar a experiência de novos usuários. Foi introduzida uma narrativa de storytelling para explicar o propósito do projeto, um diagrama `Mermaid` foi adicionado para ilustrar visualmente os três possíveis fluxos de trabalho (partindo de um vídeo, de uma legenda embutida ou de um arquivo `.srt`), e a seção de "Uso" foi reorganizada para refletir essa estrutura de "Pontos de Partida" e "Etapa Final", tornando os comandos mais intuitivos.
+
+---
+
+
 ## 2025-07-22 - Refinamento da Verificação de Dependências do Sistema
 
 Nesta sessão, o script `setup.sh` foi ajustado para utilizar `dpkg -s` na verificação de pacotes do sistema como `ffmpeg`, `python3-venv` e `python3-pip`. Esta mudança garante uma checagem mais precisa da instalação dos pacotes APT, corrigindo a sintaxe de teste anterior que não estava surtindo o efeito desejado e melhorando a robustez da configuração do ambiente.
