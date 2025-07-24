@@ -7,6 +7,7 @@ from typing import List, Dict
 from google import genai
 from google.genai.types import HttpOptions
 
+from src.core import arquivo
 from src.core.modelos import FalaLegenda
 
 # Variáveis de configuração lidas do ambiente
@@ -26,20 +27,6 @@ def obter_cliente_gemini():
         api_key=CHAVE_API
     )
     return cliente
-
-def _salvar_log(diretorio_log: str, prefixo_arquivo: str, conteudo: str, tipo_log: str):
-    """
-    Salva o conteúdo de log em um arquivo.
-    """
-    if not os.path.exists(diretorio_log):
-        os.makedirs(diretorio_log)
-    
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    arquivo_log = os.path.join(diretorio_log, f"{prefixo_arquivo}-{tipo_log}-{timestamp}.log")
-    
-    with open(arquivo_log, "w", encoding="utf-8") as f:
-        f.write(conteudo)
-    print(f"Log salvo em: {arquivo_log}")
 
 def _traduzir_lote(
     falas: List[FalaLegenda],
@@ -72,7 +59,7 @@ def _traduzir_lote(
         "<TRADUCAO_FIM>"
     )
 
-    _salvar_log(diretorio_log, prefixo_arquivo, prompt, "prompt")
+    arquivo.salvar_log(diretorio_log, prefixo_arquivo, prompt, "prompt")
 
     try:
         resposta = cliente.models.generate_content(model=MODELO_NOME, contents=prompt)
@@ -84,16 +71,16 @@ def _traduzir_lote(
             
             mensagem_erro = f"Erro: A API não retornou um conteúdo de texto válido.{feedback_prompt}"
             print(mensagem_erro)
-            _salvar_log(diretorio_log, prefixo_arquivo, mensagem_erro, "response")
+            arquivo.salvar_log(diretorio_log, prefixo_arquivo, mensagem_erro, "response")
             return {}
             
         texto_resposta_raw = resposta.text.strip()
     except Exception as e:
         print(f"Erro ao chamar a API de tradução: {e}")
-        _salvar_log(diretorio_log, prefixo_arquivo, f"ERRO: {e}", "response")
+        arquivo.salvar_log(diretorio_log, prefixo_arquivo, f"ERRO: {e}", "response")
         return {}
 
-    _salvar_log(diretorio_log, prefixo_arquivo, texto_resposta_raw, "response")
+    arquivo.salvar_log(diretorio_log, prefixo_arquivo, texto_resposta_raw, "response")
 
     match = re.search(r'<TRADUCAO_INICIO>\s*(.*?)\s*<TRADUCAO_FIM>', texto_resposta_raw, re.DOTALL)
     
@@ -170,8 +157,6 @@ def executar_traducao(argumentos, raiz_projeto: str):
     """
     Ponto de entrada para o processo de tradução a partir dos argumentos da CLI.
     """
-    from src.core import arquivo
-
     print(f"Iniciando tradução para o arquivo: {argumentos.arquivo_entrada}")
 
     try:

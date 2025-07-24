@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-24 - Refatoração da Função de Log
+
+Nesta sessão, a função de log foi refatorada para melhorar a coesão e a organização do código. A função `_salvar_log` foi movida do módulo `tradutor.py` para `arquivo.py`, onde as demais operações de I/O estão centralizadas. O nome da função foi alterado para `salvar_log` (removendo o underscore) para indicar que é uma função utilitária pública do módulo de arquivos, e todas as chamadas foram devidamente atualizadas.
+
+---
+
 ## 2025-07-24 - Refatoração Completa para Nomenclatura em Português
 
 Nesta sessão, foi executada uma refatoração abrangente para alinhar todo o código Python com a nova diretriz de usar exclusivamente o idioma português. Isso incluiu a renomeação de arquivos (`io.py` -> `arquivo.py`, `models.py` -> `modelos.py`, `translator.py` -> `tradutor.py`), classes (`SubtitleSpeech` -> `FalaLegenda`), funções, variáveis e argumentos da CLI. As variáveis de ambiente também foram traduzidas para maior consistência, reforçando a legibilidade e a manutenção do projeto.
