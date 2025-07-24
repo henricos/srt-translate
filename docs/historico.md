@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-24 - Refatoração Completa para Nomenclatura em Português
+
+Nesta sessão, foi executada uma refatoração abrangente para alinhar todo o código Python com a nova diretriz de usar exclusivamente o idioma português. Isso incluiu a renomeação de arquivos (`io.py` -> `arquivo.py`, `models.py` -> `modelos.py`, `translator.py` -> `tradutor.py`), classes (`SubtitleSpeech` -> `FalaLegenda`), funções, variáveis e argumentos da CLI. As variáveis de ambiente também foram traduzidas para maior consistência, reforçando a legibilidade e a manutenção do projeto.
+
+---
+
 ## 2025-07-23 - Correção do Bug de Parse em Lotes de Tradução
 
 Nesta sessão, foi corrigido um bug crítico no script de tradução que causava falha no parse de respostas da API a partir do segundo lote. O problema foi identificado como um exemplo estático no prompt que não considerava os índices reais das falas, levando a uma dessincronização. A solução envolveu a criação de um exemplo de resposta dinâmico no prompt, garantindo que o modelo de linguagem retorne os índices corretos para cada lote e permitindo o processamento completo e bem-sucedido de arquivos de legenda grandes.
