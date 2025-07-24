@@ -49,14 +49,14 @@ def _traduzir_lote(
     prompt = (
         "Traduza os textos abaixo para o português do Brasil. Cada linha contém um índice seguido por '|' e o texto original.\n"
         "Sua resposta DEVE manter o formato 'indice| texto traduzido' para cada linha.\n"
-        "Sua resposta DEVE ser encapsulada entre as tags <TRADUCAO_INICIO> e <TRADUCAO_FIM>.\n"
+        "Sua resposta DEVE ser encapsulada entre duas tags <TRECHO_LEGENDA>.\n"
         "Não adicione comentários ou texto extra fora dessas tags. Apenas as linhas traduzidas dentro das tags.\n\n"
         "Textos para traduzir:\n"
         f"{'\n'.join(textos_para_traduzir)}\n\n"
         "Formato de resposta esperado:\n"
-        "<TRADUCAO_INICIO>\n"
+        "<TRECHO_LEGENDA>\n"
         f"{exemplo_resposta}\n"
-        "<TRADUCAO_FIM>"
+        "<TRECHO_LEGENDA>"
     )
 
     arquivo.salvar_log(diretorio_log, prefixo_arquivo, prompt, "prompt")
@@ -82,7 +82,7 @@ def _traduzir_lote(
 
     arquivo.salvar_log(diretorio_log, prefixo_arquivo, texto_resposta_raw, "response")
 
-    match = re.search(r'<TRADUCAO_INICIO>\s*(.*?)\s*<TRADUCAO_FIM>', texto_resposta_raw, re.DOTALL)
+    match = re.search(r'<TRECHO_LEGENDA>\s*(.*?)\s*<TRECHO_LEGENDA>', texto_resposta_raw, re.DOTALL)
     
     if not match:
         print("Erro: As tags de início/fim de tradução não foram encontradas na resposta da API.")

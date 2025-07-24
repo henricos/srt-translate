@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-24 - Correção no Parser de Resposta da API de Tradução
+
+Nesta sessão, o parser de resposta da API Gemini foi ajustado para ser mais robusto. O prompt foi modificado para solicitar que a resposta seja encapsulada entre duas tags idênticas (`<TRECHO_LEGENDA>`), e a expressão regular em `src/core/tradutor.py` foi atualizada para extrair o conteúdo com base nessas novas tags. Essa mudança resolve um problema de inconsistência da API que às vezes retornava tags de fechamento incorretas, garantindo um parsing mais confiável.
+
+---
+
 ## 2025-07-24 - Padronização de Scripts Bash e Documentação
 
 Nesta sessão, foi realizada a padronização completa dos scripts Bash na pasta `bin/` para alinhá-los com a convenção de nomenclatura em português do projeto. Os scripts foram renomeados (`extract_subtitle.sh` -> `extrair_legendas.sh`, etc.), suas variáveis internas foram traduzidas, e a chamada do script de tradução foi corrigida para usar os parâmetros corretos do `main.py`. Adicionalmente, o `README.md` foi inteiramente atualizado para refletir os novos nomes de arquivos e comandos.
