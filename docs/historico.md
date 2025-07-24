@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-24 - Padronização de Scripts Bash e Documentação
+
+Nesta sessão, foi realizada a padronização completa dos scripts Bash na pasta `bin/` para alinhá-los com a convenção de nomenclatura em português do projeto. Os scripts foram renomeados (`extract_subtitle.sh` -> `extrair_legendas.sh`, etc.), suas variáveis internas foram traduzidas, e a chamada do script de tradução foi corrigida para usar os parâmetros corretos do `main.py`. Adicionalmente, o `README.md` foi inteiramente atualizado para refletir os novos nomes de arquivos e comandos.
+
+---
+
 ## 2025-07-24 - Refatoração da Função de Log
 
 Nesta sessão, a função de log foi refatorada para melhorar a coesão e a organização do código. A função `_salvar_log` foi movida do módulo `tradutor.py` para `arquivo.py`, onde as demais operações de I/O estão centralizadas. O nome da função foi alterado para `salvar_log` (removendo o underscore) para indicar que é uma função utilitária pública do módulo de arquivos, e todas as chamadas foram devidamente atualizadas.

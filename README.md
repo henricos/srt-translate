@@ -10,11 +10,11 @@ Não importa qual o seu ponto de partida, o `srt-translate` tem uma solução. E
 
 1.  **Ponto de Partida 1: Você só tem o vídeo**
     *   **Problema:** Você tem um arquivo de vídeo (um filme, uma aula, etc.) com o áudio em outro idioma, mas sem nenhuma legenda.
-    *   **Solução:** Execute o script `transcribe_audio.sh`. Ele extrai o áudio, gera um arquivo de legenda (`.srt`) no idioma original e o prepara para a etapa de tradução.
+    *   **Solução:** Execute o script `transcrever_audio.sh`. Ele extrai o áudio, gera um arquivo de legenda (`.srt`) no idioma original e o prepara para a etapa de tradução.
 
 2.  **Ponto de Partida 2: O vídeo tem uma legenda embutida**
     *   **Problema:** Seu arquivo de vídeo (geralmente `.mkv`) veio com uma ou mais legendas embutidas, mas nenhuma delas em português.
-    *   **Solução:** Execute o script `extract_subtitle.sh`. Ele "pesca" essa legenda de dentro do arquivo de vídeo e a salva como um arquivo `.srt` separado, deixando-a pronta para a tradução.
+    *   **Solução:** Execute o script `extrair_legendas.sh`. Ele "pesca" essa legenda de dentro do arquivo de vídeo e a salva como um arquivo `.srt` separado, deixando-a pronta para a tradução.
 
 3.  **Ponto de Partida 3: Você já tem o arquivo de legenda**
     *   **Problema:** Você já baixou o arquivo de legenda (`.srt`), mas ele está em inglês, espanhol ou qualquer outro idioma.
@@ -22,7 +22,7 @@ Não importa qual o seu ponto de partida, o `srt-translate` tem uma solução. E
 
 ### Etapa Final: A Tradução
 
-Todos os caminhos levam aqui. Uma vez que você tenha um arquivo de legenda `.srt` em mãos (seja ele gerado pelos scripts de preparação ou baixado por você), o passo final é sempre o mesmo: usar o script `translate_srt.sh` para obter sua legenda perfeitamente traduzida para o português.
+Todos os caminhos levam aqui. Uma vez que você tenha um arquivo de legenda `.srt` em mãos (seja ele gerado pelos scripts de preparação ou baixado por você), o passo final é sempre o mesmo: usar o script `traduzir_legenda.sh` para obter sua legenda perfeitamente traduzida para o português.
 
 ## 📁 Estrutura do Projeto
 
@@ -88,32 +88,32 @@ Os scripts na pasta `bin/` foram projetados para serem auto-suficientes, gerenci
 
 A seguir, os comandos são apresentados em uma ordem que reflete os possíveis fluxos de trabalho descritos acima.
 
-### 1. `transcribe_audio.sh` (Ponto de Partida 1)
+### 1. `transcrever_audio.sh` (Ponto de Partida 1)
 
 Use este comando quando você tem apenas o arquivo de vídeo e precisa criar a legenda a partir do áudio.
 
 ```bash
 # Irá extrair o áudio, transcrevê-lo e salvar como .srt no idioma original
-./bin/transcribe_audio.sh /caminho/para/seu/video.mkv
+./bin/transcrever_audio.sh /caminho/para/seu/video.mkv
 ```
 *Este comando está em desenvolvimento.*
 
-### 2. `extract_subtitle.sh` (Ponto de Partida 2)
+### 2. `extrair_legendas.sh` (Ponto de Partida 2)
 
 Use este comando quando seu vídeo (`.mkv`) já possui uma legenda embutida que você deseja extrair.
 
 ```bash
 # Irá extrair a legenda embutida e salvá-la como um arquivo .srt
-./bin/extract_subtitle.sh /caminho/para/seu/video.mkv
+./bin/extrair_legendas.sh /caminho/para/seu/video.mkv
 ```
 
-### 3. `translate_srt.sh` (Etapa Final)
+### 3. `traduzir_legenda.sh` (Etapa Final)
 
 Este é o passo principal e comum a todos os pontos de partida. Use-o para traduzir qualquer arquivo de legenda `.srt` para o português.
 
 ```bash
 # Irá traduzir o arquivo de legenda especificado para pt-BR
-./bin/translate_srt.sh /caminho/para/sua/legenda.srt
+./bin/traduzir_legenda.sh /caminho/para/sua/legenda.srt
 ```
 
 ## 🧪 Testes

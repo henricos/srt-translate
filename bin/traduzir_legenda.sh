@@ -5,7 +5,7 @@
 # Data: 2025-07-22
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+readonly RAIZ_PROJETO="$(cd "${SCRIPT_DIR}/.." && pwd)"
 readonly SCRIPT_NAME="$(basename "$0")"
 
 # Função para mostrar ajuda
@@ -25,7 +25,7 @@ function mostrar_ajuda() {
 function main() {
     # --- Parsing de Argumentos ---
     local arquivo_srt=""
-    local args_python=()
+    local argumentos_python=()
 
     # Loop para processar todos os argumentos
     while [[ "$#" -gt 0 ]]; do
@@ -40,7 +40,7 @@ function main() {
                     exit 1
                 fi
                 # Adiciona o argumento e seu valor para o script python
-                args_python+=("$1" "$2")
+                argumentos_python+=("$1" "$2")
                 shift 2 # Pula o argumento e seu valor
                 ;;
             -*)
@@ -75,7 +75,7 @@ function main() {
     fi
 
     # Carregar variáveis de ambiente do arquivo .env
-    local arquivo_env="${PROJECT_ROOT}/config/.env"
+    local arquivo_env="${RAIZ_PROJETO}/config/.env"
     if [[ -f "$arquivo_env" ]]; then
         export $(grep -v '^#' "$arquivo_env" | xargs)
     else
@@ -93,19 +93,19 @@ function main() {
 
     # Ativar o ambiente virtual se não estiver ativo
     if [[ -z "$VIRTUAL_ENV" ]]; then
-        local venv_path="${PROJECT_ROOT}/venv/bin/activate"
+        local venv_path="${RAIZ_PROJETO}/venv/bin/activate"
         if [[ -f "$venv_path" ]]; then
             echo "Ativando ambiente virtual..."
             source "$venv_path"
         else
-            echo "Erro: Ambiente virtual 'venv' não encontrado em ${PROJECT_ROOT}." >&2
+            echo "Erro: Ambiente virtual 'venv' não encontrado em ${RAIZ_PROJETO}." >&2
             echo "Execute o script 'setup.sh' para criar o ambiente." >&2
             exit 1
         fi
     fi
 
     # Executar o script Python principal
-    python3 "${PROJECT_ROOT}/src/main.py" translate --input-file "$arquivo_srt" "${args_python[@]}"
+    python3 "${RAIZ_PROJETO}/src/main.py" translate --arquivo-entrada "$arquivo_srt" "${argumentos_python[@]}"
 
     echo "Tradução concluída."
 }

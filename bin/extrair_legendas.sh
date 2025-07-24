@@ -4,16 +4,16 @@
 # Autor: Henrico Scaranello
 # Data: 2025-07-21
 #
-# Uso: ./extract_subtitle.sh /caminho/para/video.mkv
+# Uso: ./extrair_legendas.sh /caminho/para/video.mkv
 
 # Constantes
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly SCRIPT_NAME="$(basename "$0")"
-readonly PASTA_SAIDA="${SCRIPT_DIR}/../output"
+readonly DIRETORIO_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly NOME_SCRIPT="$(basename "$0")"
+readonly PASTA_SAIDA="${DIRETORIO_SCRIPT}/../output"
 
 # Funções
 function mostrar_ajuda() {
-    echo "Uso: $SCRIPT_NAME <caminho_para_arquivo_mkv>"
+    echo "Uso: $NOME_SCRIPT <caminho_para_arquivo_mkv>"
     echo
     echo "Extrai todas as faixas de legenda no formato SRT de um arquivo de vídeo Matroska (MKV)."
     echo "Os arquivos de legenda são salvos na pasta '$PASTA_SAIDA' com o nome do vídeo e o código do idioma."
@@ -24,11 +24,11 @@ function mostrar_ajuda() {
 
 function log() {
     # Log para stderr para não poluir a saída padrão
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] - $SCRIPT_NAME - $*" >&2
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] - $NOME_SCRIPT - $*" >&2
 }
 
 
-function main() {
+function principal() {
     # 0. Verificar dependências
     if ! command -v ffmpeg &> /dev/null; then
         log "ERRO: O comando 'ffmpeg' não foi encontrado. Por favor, instale o ffmpeg."
@@ -146,5 +146,5 @@ function main() {
 
 # Ponto de entrada do script
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    main "$@"
+    principal "$@"
 fi
