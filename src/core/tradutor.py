@@ -78,11 +78,11 @@ def _traduzir_lote(
         resposta = cliente.models.generate_content(model=MODELO_NOME, contents=prompt)
 
         if not resposta or not resposta.text:
-            retorno_api = ""
+            feedback_prompt = ""
             if hasattr(resposta, 'prompt_feedback'):
-                retorno_api = f" Causa provável: {resposta.prompt_feedback}"
+                feedback_prompt = f" Causa provável: {resposta.prompt_feedback}"
             
-            mensagem_erro = f"Erro: A API não retornou um conteúdo de texto válido.{retorno_api}"
+            mensagem_erro = f"Erro: A API não retornou um conteúdo de texto válido.{feedback_prompt}"
             print(mensagem_erro)
             _salvar_log(diretorio_log, prefixo_arquivo, mensagem_erro, "response")
             return {}
