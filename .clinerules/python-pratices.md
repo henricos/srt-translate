@@ -49,27 +49,49 @@ projeto/
 
 ## Padrões de Código
 
-### Nomes de Variáveis
-- **Sempre em português brasileiro**
-- **snake_case para variáveis e funções**
-- **PascalCase para classes**
+### Nomenclatura e Idioma (Português Brasileiro)
+
+**Regra Essencial:** Todo o código Python, incluindo nomes de **arquivos**, **variáveis**, **funções**, **classes** e **métodos**, DEVE ser escrito em português brasileiro. Esta é uma diretriz fundamental para manter a consistência e legibilidade do projeto.
+
+- **Nomes de Arquivos:** `snake_case.py` (ex: `tradutor.py`, `leitor_srt.py`)
+- **Variáveis e Funções:** `snake_case` (ex: `bloco_legenda`, `traduzir_lote`)
+- **Classes:** `PascalCase` (ex: `BlocoLegenda`, `ClienteTraducao`)
+- **Constantes:** `MAIUSCULAS_SNAKE_CASE` (ex: `CHAVE_API`, `TAMANHO_LOTE`)
+
+#### Exemplo Prático
 
 ```python
-# Variáveis
-nome_usuario = "João"
-idade_maxima = 65
-lista_produtos = []
+# ✅ CORRETO (Português Brasileiro)
 
-# Funções
-def calcular_desconto():
-    pass
+# Nomes de arquivos: `processador_legendas.py`, `modelos.py`
 
-def obter_dados_usuario():
-    pass
+# Constantes
+TAMANHO_MAXIMO_LOTE = 100
 
 # Classes
-class GerenciadorUsuarios:
+class BlocoLegenda:
     pass
+
+# Funções e variáveis
+def processar_legenda(caminho_arquivo: str):
+    todos_os_blocos = ler_arquivo_srt(caminho_arquivo)
+    # ...
+
+# ❌ INCORRETO (Inglês)
+
+# Nomes de arquivos: `subtitle_processor.py`, `models.py`
+
+# Constants
+MAX_BATCH_SIZE = 100
+
+# Classes
+class SubtitleBlock:
+    pass
+
+# Functions and variables
+def process_subtitle(file_path: str):
+    all_blocks = read_srt_file(file_path)
+    # ...
 ```
 
 ### Comentários e Documentação
