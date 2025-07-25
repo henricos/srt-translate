@@ -24,7 +24,7 @@ function mostrar_ajuda() {
 
 function log() {
     # Log para stderr para não poluir a saída padrão
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] - $NOME_SCRIPT - $*" >&2
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] - $*" >&2
 }
 
 
@@ -126,6 +126,7 @@ function principal() {
             local arquivo_saida="${PASTA_SAIDA}/${nome_base_arquivo}.${codigo_idioma}.srt"
 
             log "Extraindo faixa de legenda #${indice_legenda_ffmpeg} para: ${arquivo_saida}"
+            log "Pode demorar dependendo do tamanho do arquivo original"
 
             # Executa o ffmpeg para extrair a legenda.
             if ! ffmpeg -y -i "$arquivo_mkv" -map "0:s:${indice_legenda_ffmpeg}" -c:s srt "$arquivo_saida" -loglevel error; then
