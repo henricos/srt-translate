@@ -2,7 +2,7 @@ import os
 import re
 import sys
 from datetime import datetime
-from typing import List, Dict
+from typing import List, Dict, Optional, Tuple
 
 from google import genai
 from google.genai.types import HttpOptions
@@ -110,6 +110,93 @@ def _traduzir_lote(
             
     return dados_traduzidos
 
+
+def _tentar_formatar(
+    texto: str, max_caracteres: int, max_linhas: int
+) -> Optional[str]:
+    """
+    Tenta formatar o texto dentro das restrições.
+
+    Se max_linhas for 0, o número de linhas é considerado ilimitado.
+    Retorna a string formatada ou None se o texto não couber (com max_linhas > 0).
+    """
+    linhas: List[str] = []
+    texto_restante = texto
+    PONTUACOES_QUEBRA = [".", ",", ";", "?", "!"]
+
+    # Se max_linhas é 0, itera até não haver mais texto.
+    # Se for > 0, itera até o limite de linhas.
+    iteracoes = range(max_linhas) if max_linhas > 0 else iter(int, 1)
+
+    for _ in iteracoes:
+        if not texto_restante:
+            break
+
+        if len(texto_restante) <= max_caracteres:
+            linhas.append(texto_restante)
+            texto_restante = ""
+            break
+
+        ponto_de_corte = -1
+        trecho_analise = texto_restante[: max_caracteres + 1]
+
+        for pontuacao in PONTUACOES_QUEBRA:
+            pos = trecho_analise.rfind(pontuacao)
+            if pos > ponto_de_corte:
+                ponto_de_corte = pos + 1
+
+        if ponto_de_corte == -1:
+            ponto_de_corte = trecho_analise.rfind(" ")
+
+        if ponto_de_corte <= 0:
+            ponto_de_corte = max_caracteres
+
+        linhas.append(texto_restante[:ponto_de_corte].strip())
+        texto_restante = texto_restante[ponto_de_corte:].strip()
+
+    if not texto_restante:
+        return "\n".join(linhas)
+    
+    # Se ainda sobrou texto, a tentativa falhou (apenas se max_linhas > 0)
+    return None
+
+def formatar_legenda(
+    texto_original: str,
+) -> str:
+    """
+    Formata um texto de legenda de forma flexível, garantindo que nenhum
+    conteúdo seja perdido.
+
+    A função segue uma hierarquia de estratégias:
+    1. Tenta formatar com 42 caracteres e 2 linhas.
+    2. Se falhar, tenta com 47 caracteres e 2 linhas.
+    3. Se falhar, usa 47 caracteres por linha e quantas linhas forem necessárias.
+
+    Args:
+        texto_original: A string de texto original a ser formatada.
+
+    Returns:
+        A string formatada com quebras de linha ('\n').
+    """
+    texto = " ".join(texto_original.strip().split())
+    if not texto:
+        return ""
+
+    # Estratégia 1: Padrão ideal (42 chars, 2 linhas)
+    resultado = _tentar_formatar(texto, max_caracteres=42, max_linhas=2)
+    if resultado is not None:
+        return resultado
+
+    # Estratégia 2: Limite flexível (47 chars, 2 linhas)
+    resultado = _tentar_formatar(texto, max_caracteres=47, max_linhas=2)
+    if resultado is not None:
+        return resultado
+
+    # Estratégia 3: Emergencial (47 chars, N linhas)
+    # max_linhas=0 indica que não há limite de linhas.
+    return _tentar_formatar(texto, max_caracteres=47, max_linhas=0)
+
+
 def pipeline_traducao(
     todas_as_falas: List[FalaLegenda],
     fala_inicial: int,
@@ -151,7 +238,8 @@ def pipeline_traducao(
         for fala_original in lote:
             texto_traduzido = textos_traduzidos.get(fala_original.indice)
             if texto_traduzido:
-                mapa_falas_traduzidas[fala_original.indice] = fala_original._replace(texto=texto_traduzido)
+                texto_formatado = formatar_legenda(texto_traduzido)
+                mapa_falas_traduzidas[fala_original.indice] = fala_original._replace(texto=texto_formatado)
             else:
                 print(f"Aviso: Tradução não encontrada para a fala #{fala_original.indice}. Mantendo original.")
 

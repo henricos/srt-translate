@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-25 - Implementação da Formatação Automática de Legendas
+
+Nesta sessão, foi implementada uma melhoria significativa no pipeline de tradução para formatar as legendas de acordo com as boas práticas da indústria. Foi criada a função `formatar_legenda` em `src/core/tradutor.py`, que automaticamente quebra o texto traduzido em até 2 linhas com um limite de 42 caracteres por linha. A função prioriza quebras em pontuações e espaços para manter a legibilidade. Para garantir que nenhum texto seja perdido, foi adotada uma abordagem flexível que, em casos extremos, aumenta o limite de caracteres para 47 e, se necessário, permite a criação de múltiplas linhas.
+
+---
+
 ## 2025-07-25 - Melhoria da Resiliência e Usabilidade do Tradutor
 
 Nesta sessão, o script de tradução (`src/core/tradutor.py`) foi aprimorado para ser mais robusto e amigável. O prompt enviado à API foi corrigido para usar tags XML válidas, e a expressão regular do parser foi flexibilizada para aceitar variações na tag de fechamento. Adicionalmente, a lógica do pipeline foi ajustada para emitir um único aviso consolidado caso um lote de tradução falhe, evitando mensagens de erro repetitivas. Por fim, o arquivo `.gitignore` foi atualizado para excluir arquivos de legenda traduzidos de exemplo.
