@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-25 - Criação de Ambiente de Simulação com Jupyter Notebook
+
+Nesta sessão, foi criado um ambiente para facilitar o teste e a depuração interativa da função de tradução. Foi adicionado um diretório `notebooks/` contendo o arquivo `executar_traducao.ipynb`, que simula a chamada da função `executar_traducao` com parâmetros configuráveis. Para suportar os testes, foi criada uma pasta `data/` com um arquivo de legenda de exemplo (`exemplo.srt`), extraído do conteúdo original do projeto.
+
+---
+
 ## 2025-07-24 - Correção no Parser de Resposta da API de Tradução
 
 Nesta sessão, o parser de resposta da API Gemini foi ajustado para ser mais robusto. O prompt foi modificado para solicitar que a resposta seja encapsulada entre duas tags idênticas (`<TRECHO_LEGENDA>`), e a expressão regular em `src/core/tradutor.py` foi atualizada para extrair o conteúdo com base nessas novas tags. Essa mudança resolve um problema de inconsistência da API que às vezes retornava tags de fechamento incorretas, garantindo um parsing mais confiável.
