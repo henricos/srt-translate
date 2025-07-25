@@ -68,8 +68,7 @@ def salvar_log(diretorio_log: str, prefixo_arquivo: str, conteudo: str, tipo_log
     if not os.path.exists(diretorio_log):
         os.makedirs(diretorio_log)
     
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    arquivo_log = os.path.join(diretorio_log, f"{prefixo_arquivo}-{tipo_log}-{timestamp}.log")
+    arquivo_log = os.path.join(diretorio_log, f"{prefixo_arquivo}-{tipo_log}.log")
     
     with open(arquivo_log, "w", encoding="utf-8") as f:
         f.write(conteudo)
