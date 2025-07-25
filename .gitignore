@@ -22,3 +22,6 @@ logs/*
 # Arquivos de Saída
 output/*
 !output/.gitkeep
+
+# Arquivos de dados gerados
+data/exemplo.pt-BR.srt

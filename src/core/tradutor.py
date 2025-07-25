@@ -49,14 +49,14 @@ def _traduzir_lote(
     prompt = (
         "Traduza os textos abaixo para o português do Brasil. Cada linha contém um índice seguido por '|' e o texto original.\n"
         "Sua resposta DEVE manter o formato 'indice| texto traduzido' para cada linha.\n"
-        "Sua resposta DEVE ser encapsulada entre duas tags <TRECHO_LEGENDA>.\n"
+        "Sua resposta DEVE ser encapsulada entre as tags <TRECHO_LEGENDA> e </TRECHO_LEGENDA>.\n"
         "Não adicione comentários ou texto extra fora dessas tags. Apenas as linhas traduzidas dentro das tags.\n\n"
         "Textos para traduzir:\n"
         f"{'\n'.join(textos_para_traduzir)}\n\n"
         "Formato de resposta esperado:\n"
         "<TRECHO_LEGENDA>\n"
         f"{exemplo_resposta}\n"
-        "<TRECHO_LEGENDA>"
+        "</TRECHO_LEGENDA>"
     )
 
     arquivo.salvar_log(diretorio_log, prefixo_arquivo, prompt, "prompt")
@@ -82,13 +82,14 @@ def _traduzir_lote(
 
     arquivo.salvar_log(diretorio_log, prefixo_arquivo, texto_resposta_raw, "response")
 
-    match = re.search(r'<TRECHO_LEGENDA>\s*(.*?)\s*<TRECHO_LEGENDA>', texto_resposta_raw, re.DOTALL)
-    
+    match = re.search(r'<TRECHO_LEGENDA>\s*(.*?)\s*</?TRECHO_LEGENDA>', texto_resposta_raw, re.DOTALL)
+
     if not match:
         print("Erro: As tags de início/fim de tradução não foram encontradas na resposta da API.")
         return {}
 
     conteudo_traduzido = match.group(1).strip()
+
     dados_traduzidos = {}
     
     for linha in conteudo_traduzido.splitlines():
@@ -142,6 +143,10 @@ def pipeline_traducao(
         diretorio_log = os.path.join(raiz_projeto, "logs")
         
         textos_traduzidos = _traduzir_lote(lote, diretorio_log=diretorio_log, prefixo_arquivo=prefixo_arquivo)
+        
+        if not textos_traduzidos:
+            print(f"Aviso: Falha na tradução do lote. As falas de {indice_inicio} a {indice_fim} serão mantidas com o texto original.")
+            continue
 
         for fala_original in lote:
             texto_traduzido = textos_traduzidos.get(fala_original.indice)

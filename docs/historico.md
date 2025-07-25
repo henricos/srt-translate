@@ -1,5 +1,11 @@
 # Histórico de Sessões de Desenvolvimento
 
+## 2025-07-25 - Melhoria da Resiliência e Usabilidade do Tradutor
+
+Nesta sessão, o script de tradução (`src/core/tradutor.py`) foi aprimorado para ser mais robusto e amigável. O prompt enviado à API foi corrigido para usar tags XML válidas, e a expressão regular do parser foi flexibilizada para aceitar variações na tag de fechamento. Adicionalmente, a lógica do pipeline foi ajustada para emitir um único aviso consolidado caso um lote de tradução falhe, evitando mensagens de erro repetitivas. Por fim, o arquivo `.gitignore` foi atualizado para excluir arquivos de legenda traduzidos de exemplo.
+
+---
+
 ## 2025-07-25 - Criação de Ambiente de Simulação com Jupyter Notebook
 
 Nesta sessão, foi criado um ambiente para facilitar o teste e a depuração interativa da função de tradução. Foi adicionado um diretório `notebooks/` contendo o arquivo `executar_traducao.ipynb`, que simula a chamada da função `executar_traducao` com parâmetros configuráveis. Para suportar os testes, foi criada uma pasta `data/` com um arquivo de legenda de exemplo (`exemplo.srt`), extraído do conteúdo original do projeto.
